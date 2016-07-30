@@ -359,43 +359,48 @@ def mSaveGeoList(geoListFile):
 		pass
 
 
-def mLoadGeoList(geoCacheDir, workingNS, geoFileType):
+def mLoadGeoList(geoListDir, workingNS, geoFileType):
 	"""
 	"""
 	anim_geoDict = {}
 
 	workingNS = workingNS.split(':')[-1]
-	logger.debug(geoCacheDir)
-	for geoFile in os.listdir(geoCacheDir):
-		if geoFile.endswith(geoFileType):
-			geo = geoFile.split(workingNS + '_')[-1].split(geoFileType)[0]
-			geo_trans = geo.split('@')[1]
-			geo_shape = geo.split('@')[0]
-			anim_geoDict[geo_trans] = geo_shape
+	logger.debug('geoListDir:\n' + geoListDir)
+	if os.path.exists(geoListDir):
+		for geoFile in os.listdir(geoListDir):
+			if geoFile.endswith(geoFileType):
+				geo = geoFile.split(workingNS + '_')[-1].split(geoFileType)[0]
+				geo_trans = geo.split('@')[1]
+				geo_shape = geo.split('@')[0]
+				anim_geoDict[geo_trans] = geo_shape
 
 	return anim_geoDict
 
 
-def mLoadVisKeyList(geoCacheDir, mayaFileType):
+def mLoadVisKeyList(visKeyDir, mayaFileType):
 	"""
 	"""
 	visAniNodeList = []
-	for mayaFile in os.listdir(geoCacheDir):
-		if mayaFile.endswith(mayaFileType):
-			visAniNode = mayaFile.split('@')[1].split(mayaFileType)[0]
-			visAniNodeList.append(visAniNode)
+	logger.debug('visKeyDir:\n' + visKeyDir)
+	if os.path.exists(visKeyDir):
+		for mayaFile in os.listdir(visKeyDir):
+			if mayaFile.endswith(mayaFileType):
+				visAniNode = mayaFile.split('@')[1].split(mayaFileType)[0]
+				visAniNodeList.append(visAniNode)
 
 	return visAniNodeList
 
 
-def mLoadOutKeyList(geoCacheDir, jsonFileType):
+def mLoadOutKeyList(outKeyDir, jsonFileType):
 	"""
 	"""
 	outAniNodeList = []
-	for jsonFile in os.listdir(geoCacheDir):
-		if jsonFile.endswith(jsonFileType):
-			outAniNode = jsonFile.split('@')[1].split(jsonFileType)[0]
-			outAniNodeList.append(outAniNode)
+	logger.debug('outKeyDir:\n' + outKeyDir)
+	if os.path.exists(outKeyDir):
+		for jsonFile in os.listdir(outKeyDir):
+			if jsonFile.endswith(jsonFileType):
+				outAniNode = jsonFile.split('@')[1].split(jsonFileType)[0]
+				outAniNodeList.append(outAniNode)
 
 	return outAniNodeList
 
@@ -475,9 +480,9 @@ def mImportOutkey(keyFile, assetNS, assetName, outAniNode):
 				try:
 					cmds.disconnectAttr(inputAni[0], inNode)
 					cmds.delete(inputAni[0].split('.')[0])
-					logger.warning('viskey PARTIAL deleted. [' + inputAni[0] + ']')
+					logger.warning('outkey PARTIAL deleted. [' + inputAni[0] + ']')
 				except:
-					logger.warning('viskey PARTIAL delete failed. [' + inputAni[0] + ']')
+					logger.warning('outkey PARTIAL delete failed. [' + inputAni[0] + ']')
 			if not imported:
 				cmds.file(keyFile, i= 1, typ= 'mayaAscii', iv= 1, mnc= 1, ns= ':' + assetName)
 				imported = True

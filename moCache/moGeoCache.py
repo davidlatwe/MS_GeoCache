@@ -63,6 +63,7 @@ def getGeoCacheRoot():
 		result = cmds.confirmDialog(t= u'開玩笑的吧', m= msg, b= ['A', 'B'], db= 'A', cb= 'B', ds= 'B', icn= 'warning')
 		if result == 'A':
 			cmds.workspace(fr= ['moGeoCache', 'cache/moGeoCache'])
+			cmds.workspace(s= 1)
 			geoRootPath = moRules.rGeoCacheRoot()
 			logger.info('FileRule [moGeoCache] just set [cache/moGeoCache].')
 	return geoRootPath
@@ -191,7 +192,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 			# export outKey
 			for outAniNode in outAniNodeDict:
 				cmds.select(outAniNode, r= 1)
-				keyFile = moRules.rOutkeyFilePath(geoCacheDir, assetName, outAniNode)
+				keyFile = moRules.rOutkeyFilePath(geoCacheDir, assetName, outAniNode, 1)
 				moMethod.mExportOutkey(keyFile, outAniNode, outAniNodeDict[outAniNode])
 			# remove mGCVisKey namespace
 			logger.info('nodeOutNS: <' + nodeOutNS + '> Del.')
@@ -217,7 +218,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 			# export visKey
 			for visAniNode in visAniNodeList:
 				cmds.select(visAniNode, r= 1)
-				keyFile = moRules.rViskeyFilePath(geoCacheDir, assetName, anim_viskey[visAniNodeList.index(visAniNode)])
+				keyFile = moRules.rViskeyFilePath(geoCacheDir, assetName, anim_viskey[visAniNodeList.index(visAniNode)], 1)
 				moMethod.mExportViskey(keyFile)
 			# remove mGCVisKey namespace
 			logger.info('viskeyNS: <' + viskeyNS + '> Del.')
@@ -243,7 +244,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 			moMethod.mBakeRigkey(rigCtrlList, playbackRange)
 			# export baked rigging ctrls
 			cmds.select(rigCtrlList, r= 1)
-			rigFile = moRules.rRigkeyFilePath(geoCacheDir, assetName)
+			rigFile = moRules.rRigkeyFilePath(geoCacheDir, assetName, 1)
 			moMethod.mExportRigkey(rigFile)
 			# remove mGCVisKey namespace
 			logger.info('rigkeyNS: <' + rigkeyNS + '> Del.')
@@ -272,7 +273,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 			# write out transform node's name
 			for ves in cmds.listRelatives(ves_grp, c= 1):
 				vesShape = cmds.listRelatives(ves, s= 1)[0]
-				geoListFile = moRules.rGeoListFilePath(geoCacheDir, assetName, ves, vesShape, geoFileType)
+				geoListFile = moRules.rGeoListFilePath(geoCacheDir, assetName, ves, vesShape, geoFileType, 1)
 				moMethod.mSaveGeoList(geoListFile)
 			# export GeoCache
 			_suppressWarn(1)
@@ -288,7 +289,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 			logger.warning('No mesh to cache.')
 
 		# note down frameRate and playback range
-		timeInfoFile = moRules.rTimeInfoFilePath(geoCacheDir, assetName)
+		timeInfoFile = moRules.rTimeInfoFilePath(geoCacheDir, assetName, 1)
 		moMethod.mExportTimeInfo(timeInfoFile, timeUnit, playbackRange_keep, isStatic)
 		logger.info('TimeInfo exported.')
 
@@ -385,8 +386,9 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 			logger.warning('[' + rootNode + '] TimeInfo not exists.')
 
 		''' geoCache
-		'''	
-		anim_geoDict = moMethod.mLoadGeoList(geoCacheDir, workingNS, geoFileType)
+		'''
+		geoListDir = moRules.rGeoListFilePath(geoCacheDir)
+		anim_geoDict = moMethod.mLoadGeoList(geoListDir, workingNS, geoFileType)
 		if anim_geoDict:
 			anim_transList = anim_geoDict.keys()
 			anim_transList.sort()
@@ -407,7 +409,8 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 
 		''' nodeOutput
 		'''
-		outAniNodeList = moMethod.mLoadOutKeyList(geoCacheDir, '_input.json')
+		outKeyDir = moRules.rOutkeyFilePath(geoCacheDir)
+		outAniNodeList = moMethod.mLoadOutKeyList(outKeyDir, '_input.json')
 		if not isPartial:
 			if outAniNodeList:
 				logger.info('nodeOutNS: <' + nodeOutNS + '> Del.')
@@ -426,7 +429,8 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 
 		''' visibility
 		'''
-		visAniNodeList = moMethod.mLoadVisKeyList(geoCacheDir, '_visKeys.ma')
+		visKeyDir = moRules.rViskeyFilePath(geoCacheDir)
+		visAniNodeList = moMethod.mLoadVisKeyList(visKeyDir, '_visKeys.ma')
 		if visAniNodeList:
 			if isPartial:
 				visAniNodeList = [ dag for dag in visAniNodeList if dag in partial_Dict[rootNode] ]

@@ -556,7 +556,7 @@ def ui_geoCache(midValue):
 		assetName = text(txt_infoAssetName, q= 1, l= 1)
 		msg = ''
 		if assetName:
-			geoCacheRoot = workspace(q= 1, rd= 1) + workspace('moGeoCache', q= 1, fre= 1)
+			geoCacheRoot = moGeoCache.getGeoCacheRoot()
 			geoCacheDir = geoCacheRoot + '/' + assetName
 			if os.path.exists(geoCacheDir):
 				result = fileDialog2(cap= 'geoCache Folder', fm= 3, okc= 'Select', dir= geoCacheDir)
@@ -568,7 +568,7 @@ def ui_geoCache(midValue):
 					else:
 						msg = u'這個 asset 並沒有你說的 geoCache 資料夾。'
 			else:
-				msg = u'唉。Asset [ ' + assetName + ' ] 並不存在於 moGeoCache 資料夾中，\n' \
+				msg = u'唉。Asset [ ' + assetName + u' ] 並不存在於 moGeoCache 資料夾中，\n' \
 					+ u'可能是從未輸出 GeoCache 過吧。'
 		else:
 			msg = u'請先選取一個 Asset，好嗎 ?'
