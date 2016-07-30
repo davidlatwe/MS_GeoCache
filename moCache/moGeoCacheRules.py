@@ -92,24 +92,31 @@ def rWorkspaceRoot():
 	return sInfo.workspaceRoot
 
 
-def rGeoCacheDir(assetName, mustMake, sceneName= None):
+def rGeoCacheRoot():
 	"""
 	"""
 	sInfo = _getSceneInfo()
-	geoDir = ''
+	geoRootPath = ''
 	try:
-		geoDir = sInfo.dirRule['moGeoCache']
+		geoRootPath = sInfo.workspaceRoot + sInfo.dirRule['moGeoCache']
 	except:
 		logger.error('[moGeoCache] file rule missing.')
 
-	rootPath = sInfo.workspaceRoot + geoDir
+	return geoRootPath
+
+
+
+def rGeoCacheDir(geoRootPath, assetName, mustMake, sceneName= None):
+	"""
+	"""
+	sInfo = _getSceneInfo()
 	isMakeDir = False
 	if sceneName is None:
 		sceneName = sInfo.sceneSplitExt
 	if sceneName is None or mustMake:
 		isMakeDir = True
 
-	geoCache_path = sInfo.sep.join([ rootPath, assetName, sceneName ])
+	geoCache_path = sInfo.sep.join([ geoRootPath, assetName, sceneName ])
 
 	if isMakeDir:
 		sInfo.makeDir(geoCache_path)

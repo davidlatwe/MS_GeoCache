@@ -50,11 +50,29 @@ def getAssetList():
 	return assetList
 
 
-def getGeoCacheDir(assetName, mode, sceneName):
+def getGeoCacheRoot():
+	"""
+	"""
+	geoRootPath = moRules.rGeoCacheRoot()
+	if not geoRootPath and exc == 'maya.exe':
+		# inject default [moGeoCache] fileRule or custom later.
+		msg = u'我是沒看到 [moGeoCache] 在 workspace 的 fileRules 裡面啦。\n' \
+			+ u'然後現在你有兩條路 :\n' \
+			+ u'A) 現在就幫你設路徑 [cache/moGeoCache]，並繼續執行工作。(建議選項)\n' \
+			+ u'B) 先停下工作沒關係，等一下再說。'
+		result = cmds.confirmDialog(t= u'開玩笑的吧', m= msg, b= ['A', 'B'], db= 'A', cb= 'B', ds= 'B', icn= 'warning')
+		if result == 'A':
+			cmds.workspace(fr= ['moGeoCache', 'cache/moGeoCache'])
+			geoRootPath = moRules.rGeoCacheRoot()
+			logger.info('FileRule [moGeoCache] just set [cache/moGeoCache].')
+	return geoRootPath
+
+
+def getGeoCacheDir(geoRootPath, assetName, mode, sceneName):
 	"""
 	取得該 asset 的 GeoCache 存放路徑，並依 mode 來判斷是否需要在路徑不存在時建立資料夾
 	"""
-	return moRules.rGeoCacheDir(assetName, mode, sceneName)
+	return moRules.rGeoCacheDir(geoRootPath, assetName, mode, sceneName)
 
 
 def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName_override= None, sceneName_override= None):
@@ -66,6 +84,16 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 	@param  assetName_override - 輸出過程用此取代該 物件 原本的 assetName
 	@param  sceneName_override - 輸出過程用此取代該 場景 原本的 sceneName
 	"""
+	# 檢查 GeoCache 根路徑
+	logger.debug('Checking [moGeoCache] fileRule.')
+	geoRootPath = getGeoCacheRoot()
+	if not geoRootPath:
+		logger.critical('Procedure has to stop due to export root dir not exists.\n' \
+			+ 'Must add [moGeoCache] fileRule in your workspace.')
+		return 1
+	else:
+		logger.debug('FileRule [moGeoCache] exists.')
+
 	logger.info('GeoCache export init.')
 
 	# namespace during action
@@ -127,7 +155,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 		'''
 		assetNS = moRules.rAssetNS(rootNode)
 		assetName = moRules.rAssetName(assetNS) if not assetName_override else assetName_override
-		geoCacheDir = getGeoCacheDir(assetName, 1, sceneName_override)
+		geoCacheDir = getGeoCacheDir(geoRootPath, assetName, 1, sceneName_override)
 		geoFileType = moRules.rGeoFileType()
 		smoothExclusive, smoothMask = moMethod.mGetSmoothMask(assetName)
 		rigCtrlList = moMethod.mGetRigCtrlExportList(assetName)
@@ -273,6 +301,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 		moMethod.mRangePushBack(1)
 
 	logger.info('GeoCache export completed.')
+	return 0
 
  
 def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDuplicateName= None, conflictList= None, didWrap= None):
@@ -285,6 +314,16 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 	@param        conflictList - 物件路徑與名稱只要包含此陣列參數內的字串就跳過輸入
 	@param             didWrap - 此為輸入程序內部進行 wrap 遞迴時所用，紀錄已經處理過的 wrap 物件，以避免無限遞迴
 	"""
+	# 檢查 GeoCache 根路徑
+	logger.debug('Checking [moGeoCache] fileRule.')
+	geoRootPath = getGeoCacheRoot()
+	if not geoRootPath:
+		logger.critical('Procedure has to stop due to export root dir not exists.\n' \
+			+ 'Must add [moGeoCache] fileRule in your workspace.')
+		return 1
+	else:
+		logger.debug('FileRule [moGeoCache] exists.')
+
 	logger.info('GeoCache import init.')
 
 	# namespace during action
@@ -328,7 +367,7 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 		workRoot = moRules.rWorkspaceRoot()
 		assetNS = moRules.rAssetNS(rootNode)
 		assetName = moRules.rAssetName(assetNS) if not assetName_override else assetName_override
-		geoCacheDir = getGeoCacheDir(assetName, 0, sceneName)
+		geoCacheDir = getGeoCacheDir(geoRootPath, assetName, 0, sceneName)
 		geoFileType = moRules.rGeoFileType()
 		conflictList = [] if conflictList is None else conflictList
 		staticInfo = []
@@ -462,3 +501,4 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 				importGeoCache(sName, True, assetName_override, ignorDuplicateName, conflictList, willWrap)
 
 	logger.info('GeoCache' + (' PARTIAL' if isPartial else '') + ' import completed.')
+	return 0

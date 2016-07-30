@@ -109,9 +109,9 @@ def prep_SHDSet(mode, *args):
 	"""
 	sname = system.sceneName().namebase.lower()
 	if '_shading_' not in sname and '_shd_' not in sname:
-		msg = 'This scene is not a shading asseet.\n' \
-			+ '(Filename does not contain "_shading_" or "_shd_".)'
-		confirmDialog(t= 'Abort', m= msg, b= ['Ok'], db= 'Ok', icn= 'warning')
+		msg = u'目前開啟的場景並不是一個 shading asseet.\n' \
+			+ u'(此判斷是基於檔名未包含 "_shading_" 或 "_shd_" 等字串。)'
+		confirmDialog(t= u'不可以', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 		return
 
 	if mode == 'wrapSet':
@@ -145,9 +145,9 @@ def prep_SHDSet(mode, *args):
 			addAttr(wSet, ln= 'wrapSource', dt= 'string')
 			setAttr(wSet + '.wrapSource', srcObj)
 		else:
-			msg = 'Select at least two objects.\n' \
-				+ '(wrap targets, and one wrap source.)'
-			confirmDialog(t= 'Abort', m= msg, b= ['Ok'], db= 'Ok', icn= 'warning')
+			msg = u'嗯，請至少選取兩個物件，並注意選取順序。\n' \
+				+ u'(先選取所有你要的 wrapTargets，最後再選一個 wrapSource。)'
+			confirmDialog(t= u'噢，拜託喔', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 
 
 def prep_RIGSet(mode, *args):
@@ -155,9 +155,9 @@ def prep_RIGSet(mode, *args):
 	"""
 	sname = system.sceneName().namebase.lower()
 	if '_rigging_' not in sname and '_rig_' not in sname:
-		msg = 'This scene is not a rigging asseet.\n' \
-			+ '(Filename does not contain "_rigging_" or "_rig_".)'
-		confirmDialog(t= 'Abort', m= msg, b= ['Ok'], db= 'Ok', icn= 'warning')
+		msg = u'目前開啟的場景並不是一個 rigging asseet.\n' \
+			+ u'(此判斷是基於檔名未包含 "_rigging_" 或 "_rig_" 等字串。)'
+		confirmDialog(t= u'不可以', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 		return
 
 	if mode == 'smoothSet':
@@ -226,9 +226,9 @@ def prep_setSmoothExclusive(*args):
 	global cBox_exclusive
 	sname = system.sceneName().namebase.lower()
 	if '_rigging_' not in sname and '_rig_' not in sname:
-		msg = 'This scene is not a rigging asseet.\n' \
-			+ '(Filename does not contain "_rigging_" and "_rig_".)'
-		confirmDialog(t= 'Abort', m= msg, b= ['Ok'], db= 'Ok', icn= 'warning')
+		msg = u'目前開啟的場景並不是一個 rigging asseet.\n' \
+			+ u'(此判斷是基於檔名未包含 "_rigging_" 或 "_rig_" 等字串。)'
+		confirmDialog(t= u'不可以', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 		checkBox(cBox_exclusive, e= 1, v= 0)
 		return
 
@@ -566,13 +566,14 @@ def ui_geoCache(midValue):
 						textField(textF_choose, e= 1, tx= folderName)
 						text(txt_infoSceneName, e= 1, l= folderName)
 					else:
-						msg = 'This asset does not have this geoCache folder.'
+						msg = u'這個 asset 並沒有你說的 geoCache 資料夾。'
 			else:
-				msg = 'Asset [ ' + assetName + ' ] does not exists in the moGeoCache folder.'
+				msg = u'唉。Asset [ ' + assetName + ' ] 並不存在於 moGeoCache 資料夾中，\n' \
+					+ u'可能是從未輸出 GeoCache 過吧。'
 		else:
-			msg = 'Select an Asset first.'
+			msg = u'請先選取一個 Asset，好嗎 ?'
 		if msg:
-			confirmDialog(t= 'Warning', m= msg, b= ['Ok'], db= 'Ok', icn= 'warning')
+			confirmDialog(t= u'警告你喔', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 
 	iconTextButton(icBtn_textF_choose, e= 1, c= openCacheFolder)
 

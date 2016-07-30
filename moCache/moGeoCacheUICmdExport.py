@@ -64,17 +64,26 @@ def main(projPath, filePath, assetList, paramDict):
 	logger.info('Selecting assets...')
 	select(assetList, r= 1)
 	logger.debug('Selected assets: \n' + '\n   '.join(cmds.ls(sl= 1)))
-	logger.info('Starting GeoCache.')
+	logger.info('Starting GeoCache procedure.')
 	# GO
-	moGeoCache.exportGeoCache(
+	result = moGeoCache.exportGeoCache(
 		subdivLevel= paramDict['subdiv'],
 		isPartial= paramDict['isPartial'],
 		isStatic= paramDict['isStatic'],
 		assetName_override= paramDict['assetName'],
 		sceneName_override= paramDict['sceneName']
 		)
-	# Done
-	logger.info('GeoCache Done.')
+	fileName = str(system.sceneName().basename())
+	newFile(force= True)
+	cmds.quit(force= True)
+	if result == 0:
+		# Done
+		logger.info('GeoCache Done.')
+		logger.info(_processEndMsg(fileName, 'Export Done.'))
+	elif result == 1:
+		logger.critical(_processEndMsg(fileName, 'Export Fail. [moGeoCache] fileRule missing.'))
+	else:
+		logger.critical(_processEndMsg(fileName, 'Export Might Fail. Something went wrong.'))
 
 if __name__ == '__main__':
 	# 取得 package 路徑並置入 sys.path
@@ -105,10 +114,6 @@ if __name__ == '__main__':
 	# GO
 	if assetList and os.path.isfile(filePath):
 		main(projPath, filePath, assetList, paramDict)
-		fileName = str(system.sceneName().basename())
-		newFile(force= True)
-		cmds.quit(force= True)
-		logger.info(_processEndMsg(fileName, 'Export Done.'))
 	elif os.path.isfile(filePath):
 		fileName = os.path.basename(filePath)
 		logger.error(_processEndMsg(fileName, 'Nothing to Export.'))
