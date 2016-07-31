@@ -460,6 +460,21 @@ def mLoadOutKeyList(exportLogDict, outKeyDir, jsonFileType):
 	return outAniNodeList
 
 
+def mLoadGpuList(exportLogDict, gpuListDir, gpuFileType):
+	"""
+	"""
+	gpuList = []
+	gpuListDir = os.path.dirname(gpuListDir)
+	logger.debug('gpuListDir:\n' + gpuListDir)
+	if os.path.exists(gpuListDir):
+		for gpuFile in os.listdir(gpuListDir):
+			if gpuFile.endswith(gpuFileType):
+				if gpuFile in exportLogDict['gpu']:
+					gpuList.append(gpuFile)
+
+	return gpuList
+
+
 def mExportViskey(keyFile):
 	"""
 	輸出 visible key
@@ -716,6 +731,33 @@ def mImportGeoCache(xmlFile, assetNS, animTran, conflictList,
 				importGeoProcess(trans)
 	else:
 		logger.warning('No target found -> ' + animTran)
+
+
+def mExportGPUCache(ves_grp, playbackRange, gpuName):
+	"""
+	"""
+	ves_member = cmds.listRelatives(ves_grp, c= 1)
+	st = playbackRange[0]
+	et = playbackRange[1]
+	dirPath = os.path.dirname(gpuName)
+	fileName = os.path.basename(gpuName)
+	result = cmds.gpuCache(ves_member, startTime= st, endTime= et,
+						optimize= 1, optimizationThreshold= 40000,
+						writeMaterials= 1, dataFormat= 'ogawa',
+						directory= dirPath, filePrefix= fileName)
+	return result
+
+
+def mImportGPUCache(gpuListDir, gpuFile, gpuGrp, assetName, gpuNS, workingNS):
+	"""
+	"""
+	gpuNS = ':' + assetName + gpuNS + ':'
+	gpuBase = gpuFile.split('.')[0]
+	gpuNode = gpuNS + 'gpu' + gpuBase.split(workingNS.split(':')[-1])[1]
+	gpuPath = gpuListDir.replace(os.path.basename(gpuListDir), gpuFile)
+	gpuShape = pm.createNode('gpuCache', n= gpuNode + 'Shape')
+	gpuTrans = gpuShape.getParent().rename(gpuNode).setParent(gpuGrp)
+	gpuShape.cacheFileName.set(gpuPath)
 
 
 def mExportTimeInfo(timeInfoFile, timeUnit, playbackRange, isStatic):

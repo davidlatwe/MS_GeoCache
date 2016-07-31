@@ -48,6 +48,12 @@ def rRigkeyNS():
 	return ':moGCRigkey'
 
 
+def rGpuNS():
+	"""
+	"""
+	return ':moGCGPU'
+
+
 def rRigkeyGrpName():
 	"""
 	"""
@@ -193,6 +199,22 @@ def rOutkeyFilePath(geoCacheDir, assetName= None, outAniNode= None,
 	else:
 		fileName = ''
 	filePath = geoCacheDir + sInfo.sep + 'moOutkey' + sInfo.sep \
+			 + fileName
+	if makeDir:
+		sInfo.makeDir(filePath, 1)
+
+	return filePath
+
+
+def rGPUFilePath(geoCacheDir, assetName= None, makeDir= None):
+	"""
+	"""
+	sInfo = _getSceneInfo()
+	if assetName:
+		fileName = assetName + '_GPU_'
+	else:
+		fileName = ''
+	filePath = geoCacheDir + sInfo.sep + 'moGPU' + sInfo.sep \
 			 + fileName
 	if makeDir:
 		sInfo.makeDir(filePath, 1)

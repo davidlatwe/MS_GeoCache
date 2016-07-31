@@ -78,7 +78,7 @@ def getGeoCacheDir(geoRootPath, assetName, mode, sceneName):
 
 def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName_override= None, sceneName_override= None):
 	"""
-	輸出 geoCache
+	輸出 geoCache 以及 gpuCache
 	@param  subdivLevel - 模型在 cache 之前需要被 subdivide smooth 的次數
 	@param    isPartial - 局部輸出模式 (只輸出所選，不輸出 asset 根物件底下的所有子物件)
 	@param     isStatic - 靜態物件輸出
@@ -179,7 +179,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 
 		''' exportLog
 		'''
-		exportLogDict = {}.fromkeys(['outKey', 'visKey', 'geo'], [])
+		exportLogDict = {}.fromkeys(['outKey', 'visKey', 'geo', 'gpu'], [])
 		
 		''' nodeOutput
 		'''
@@ -266,7 +266,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 		else:
 			logger.warning('No rigging controls to export.')
 		
-		''' geoCache
+		''' geoCache & gpu
 		'''	
 		if anim_meshes:
 			# Add and Set namespace
@@ -291,9 +291,15 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 			exportLogDict['geo'] = geoList
 			# export GeoCache
 			_suppressWarn(1)
-			logger.info('Asset [' + assetName + '] ready to start caching.')
+			logger.info('Asset [' + assetName + '] geometry caching.')
 			cmds.select(ves_grp, r= 1, hi= 1)
 			moMethod.mExportGeoCache(geoCacheDir, assetName)
+			# export GPU
+			logger.info('Asset [' + assetName + '] gpu caching.')
+			gpuName = moRules.rGPUFilePath(geoCacheDir, assetName, 1)
+			gpuABC = moMethod.mExportGPUCache(ves_grp, playbackRange, gpuName)
+			exportLogDict['gpu'] = [os.path.basename(abc) for abc in gpuABC]
+			logger.debug('\n'.join(gpuABC))
 			logger.info('Asset [' + assetName + '] caching process is done.')
 			# remove mGC namespace
 			logger.info('workingNS: <' + workingNS + '> Del.')
@@ -538,4 +544,84 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 				importGeoCache(sName, True, assetName_override, ignorDuplicateName, conflictList, willWrap)
 
 	logger.info('GeoCache' + (' PARTIAL' if isPartial else '') + ' import completed.')
+	return 0
+
+
+def importGPUCache(sceneName, assetList):
+	"""
+	輸入 gpuCache
+	@param    sceneName - gpuCache 來源的場景名稱
+	@param	  assetList - 需要 import 的 asset 清單
+	"""
+	# 檢查 GeoCache 根路徑
+	logger.debug('Checking [moGeoCache] fileRule.')
+	geoRootPath = getGeoCacheRoot()
+	if not geoRootPath:
+		logger.critical('Procedure has to stop due to export root dir not exists.\n' \
+			+ 'Must add [moGeoCache] fileRule in your workspace.')
+		return 1
+	else:
+		logger.debug('FileRule [moGeoCache] exists.')
+
+	logger.info('GPUCache import init.')
+
+	# namespace during action
+	workingNS = moRules.rWorkingNS()
+	gpuNS = moRules.rGpuNS()
+
+	logger.info('GPU Cache import start.')
+	logger.info('import queue: ' + str(len(assetList)))
+
+	# 作業開始，依序處理各個 asset
+	for assetName in assetList:
+		logger.info('[' + assetName + '] importing.')
+
+		''' vars
+		'''
+		workRoot = moRules.rWorkspaceRoot()
+		geoCacheDir = getGeoCacheDir(geoRootPath, assetName, 0, sceneName)
+
+		if not cmds.file(geoCacheDir, q= 1, ex= 1):
+			logger.warning('[' + assetName + '] geoCacheDir not exists -> ' + geoCacheDir)
+			continue
+
+		''' exportLog
+		'''
+		logPath = moRules.rExportLogPath(geoCacheDir, assetName)
+		exportLogDict = moMethod.mExportLogRead(logPath)
+		if not exportLogDict:
+			logger.critical('[' + assetName + '] export log load failed.\n' \
+							+ 'No import will be proceed.')
+			logger.debug('ExportLog Path :\n' + logPath)
+			continue
+
+		''' timeInfo
+		'''
+		# go set frameRate and playback range
+		timeInfoFile = moRules.rTimeInfoFilePath(geoCacheDir, assetName)
+		if cmds.file(timeInfoFile, q= 1, ex= 1):
+			staticInfo = moMethod.mImportTimeInfo(timeInfoFile)
+			logger.info('TimeInfo imported.')
+		else:
+			logger.critical('[' + assetName + '] TimeInfo not exists.')
+
+		''' gpuCache
+		'''
+		gpuListDir = moRules.rGPUFilePath(geoCacheDir, assetName)
+		gpuList = moMethod.mLoadGpuList(exportLogDict, gpuListDir, '.abc')
+		if gpuList:
+			logger.info('gpuNS: <' + gpuNS + '> Del.')
+			# remove moGCGPU namespace
+			moMethod.mCleanWorkingNS(':' + assetName + gpuNS)
+
+			logger.info('[' + assetName + '] importing gpu cache.')
+			gpuGrp = ':' + assetName + gpuNS + ':gpuGrp'
+			cmds.group(em= 1, n= gpuGrp)
+			for gpuFile in gpuList:
+				# import gpu and keep moGCGPU namespace in gpu
+				moMethod.mImportGPUCache(gpuListDir, gpuFile, gpuGrp, assetName, gpuNS, workingNS)
+		else:
+			logger.warning('[' + assetName + '] No gpu file to import.')
+
+	logger.info('GPU Cache import completed.')
 	return 0

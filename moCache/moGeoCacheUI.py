@@ -18,6 +18,7 @@ def exec_getParams(*args):
 	global rbtn_geoIO
 	global txt_infoAssetName
 	global txt_infoSceneName
+	global textF_assetName
 	global cBox_isPartial
 	global cBox_isStatic
 	global cBox_division
@@ -27,6 +28,7 @@ def exec_getParams(*args):
 	
 	conflictList = str(textField(textF_filter, q= 1, tx= 1))
 	assetName_override = str(textField(textF_assetName, q= 1, tx= 1))
+	assetListStr = text(txt_infoAssetName, q= 1, l= 1)
 	paramDict = {
 		'assetName' : assetName_override if assetName_override else None,
 		'sceneName' : str(text(txt_infoSceneName, q= 1, l= 1)),
@@ -34,7 +36,8 @@ def exec_getParams(*args):
 		 'isStatic' : checkBox(cBox_isStatic, q= 1, v= 1),
 		   'subdiv' : 1 if checkBox(cBox_division, q= 1, v= 1) else None,
 		 'sameName' : checkBox(cBox_dupName, q= 1, v= 1),
-		 'conflict' : conflictList.split(';') if conflictList else []
+		 'conflict' : conflictList.split(';') if conflictList else [],
+		'assetList' : [ast.strip() for ast in str(assetListStr).split(',')]
 	}
 
 	if exec_checkParam(paramDict):
@@ -56,7 +59,8 @@ def exec_checkParam(paramDict):
 		 'isStatic',
 		   'subdiv',
 		 'sameName',
-		 'conflict'
+		 'conflict',
+		'assetList'
 	]
 
 	for param in paramList:
@@ -105,6 +109,11 @@ def exec_Import(actionType, paramDict):
 	if actionType == 1:
 		pass
 	if actionType == 2:
+		moGeoCache.importGPUCache(
+			sceneName= paramDict['sceneName'],
+			assetList= paramDict['assetList']
+			)
+		'''
 		moGeoCache.importGeoCache(
 			sceneName= paramDict['sceneName'],
 			isPartial= paramDict['isPartial'],
@@ -112,6 +121,7 @@ def exec_Import(actionType, paramDict):
 			ignorDuplicateName= paramDict['sameName'],
 			conflictList= paramDict['conflict']
 			)
+		'''
 	if actionType == 3:
 		pass
 
