@@ -10,7 +10,8 @@ import os, sys
 import functools
 import mLogger; reload(mLogger)
 exc = os.path.basename(sys.executable)
-logger = mLogger.MLog('moGC.mMaya.mGeneral', False if exc == 'mayapy.exe' else True)
+logger = mLogger.MLog('moGC.mMaya.general',
+					False if exc == 'mayapy.exe' else True)
 
 
 

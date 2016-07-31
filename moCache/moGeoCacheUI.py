@@ -5,6 +5,7 @@ Created on 2016.07.06
 @author: davidpower
 '''
 from pymel.core import *
+import maya.cmds as cmds
 from functools import partial
 from subprocess import Popen, PIPE
 import moCache.moGeoCache as moGeoCache; reload(moGeoCache)
@@ -42,7 +43,7 @@ def exec_getParams(*args):
 		if mode == 1:
 			exec_Export(actionType, paramDict)
 		if mode == 2:
-			exec_Import(3, paramDict)
+			exec_Import(2, paramDict)
 
 
 def exec_checkParam(paramDict):
@@ -67,6 +68,19 @@ def exec_Export(actionType, paramDict):
 	"""
 	"""
 	if actionType == 1:
+		# ask file save if has modified
+		if cmds.file(q= 1, mf= 1):
+			msg = u'偵測到有場景更動未儲存。\n' \
+				+ u'若不儲存的話，CMD 模式將不會讀取到變更。\n' \
+				+ u'你要存檔嗎 ?'
+			result = confirmDialog(t= u'不好意思', m= msg, b= [u'存', u'免', u'我想一下'],
+				db= u'存', cb= u'免', ds= u'我想一下', icn= 'warning')
+			if result == u'存':
+				saveFile()
+			if result == u'免':
+				pass
+			if result == u'我想一下':
+				return
 		pyFile = moGeoCacheUICmdExport.__file__
 		projPath = workspace(q= 1, rd= 1)
 		filePath = str(system.sceneName())
@@ -74,8 +88,6 @@ def exec_Export(actionType, paramDict):
 		paramDict = str(paramDict)
 		Popen(['mayapy', pyFile, projPath, filePath, assetList, paramDict], shell= False)
 	if actionType == 2:
-		pass
-	if actionType == 3:
 		moGeoCache.exportGeoCache(
 			subdivLevel= paramDict['subdiv'],
 			isPartial= paramDict['isPartial'],
@@ -83,18 +95,16 @@ def exec_Export(actionType, paramDict):
 			assetName_override= paramDict['assetName'],
 			sceneName_override= paramDict['sceneName']
 			)
+	if actionType == 3:
+		pass
 
 
 def exec_Import(actionType, paramDict):
 	"""
 	"""
-	'''
 	if actionType == 1:
 		pass
 	if actionType == 2:
-		pass
-	'''
-	if actionType == 3:
 		moGeoCache.importGeoCache(
 			sceneName= paramDict['sceneName'],
 			isPartial= paramDict['isPartial'],
@@ -102,6 +112,8 @@ def exec_Import(actionType, paramDict):
 			ignorDuplicateName= paramDict['sameName'],
 			conflictList= paramDict['conflict']
 			)
+	if actionType == 3:
+		pass
 
 
 def prep_SHDSet(mode, *args):
@@ -109,7 +121,7 @@ def prep_SHDSet(mode, *args):
 	"""
 	sname = system.sceneName().namebase.lower()
 	if '_shading_' not in sname and '_shd_' not in sname:
-		msg = u'目前開啟的場景並不是一個 shading asseet.\n' \
+		msg = u'目前開啟的場景並不是一個 shading asseet。\n' \
 			+ u'(此判斷是基於檔名未包含 "_shading_" 或 "_shd_" 等字串。)'
 		confirmDialog(t= u'不可以', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 		return
@@ -155,7 +167,7 @@ def prep_RIGSet(mode, *args):
 	"""
 	sname = system.sceneName().namebase.lower()
 	if '_rigging_' not in sname and '_rig_' not in sname:
-		msg = u'目前開啟的場景並不是一個 rigging asseet.\n' \
+		msg = u'目前開啟的場景並不是一個 rigging asseet。\n' \
 			+ u'(此判斷是基於檔名未包含 "_rigging_" 或 "_rig_" 等字串。)'
 		confirmDialog(t= u'不可以', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 		return
@@ -226,7 +238,7 @@ def prep_setSmoothExclusive(*args):
 	global cBox_exclusive
 	sname = system.sceneName().namebase.lower()
 	if '_rigging_' not in sname and '_rig_' not in sname:
-		msg = u'目前開啟的場景並不是一個 rigging asseet.\n' \
+		msg = u'目前開啟的場景並不是一個 rigging asseet。\n' \
 			+ u'(此判斷是基於檔名未包含 "_rigging_" 或 "_rig_" 等字串。)'
 		confirmDialog(t= u'不可以', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 		checkBox(cBox_exclusive, e= 1, v= 0)
@@ -496,9 +508,9 @@ def ui_geoCache(midValue):
 			rowLayout(nc= 2, adj= 2)
 			if True:
 				text(l= 'By : ', al= 'right', w= actValue)
-				rbtn_execBy = radioButtonGrp(nrb= 3, l='', cw4= [0, 70, 70, 70], h= 30,
+				rbtn_execBy = radioButtonGrp(nrb= 3, l='', cw4= [5, 55, 50, 60], h= 30,
 					cl4= ['right', 'left', 'left', 'left'],
-					la3= ['mayapy', 'deadline', 'GUI'], sl= 1)
+					la3= ['CMD', 'GUI', 'deadline'], sl= 1)
 				setParent('..')
 
 			text(l= '', h= 5)

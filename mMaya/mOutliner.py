@@ -10,7 +10,8 @@ import os, sys
 import functools
 import mLogger; reload(mLogger)
 exc = os.path.basename(sys.executable)
-logger = mLogger.MLog('moGC.mMaya.mOutline', False if exc == 'mayapy.exe' else True)
+logger = mLogger.MLog('moGC.mMaya.outline',
+					False if exc == 'mayapy.exe' else True)
 
 
 
@@ -43,7 +44,8 @@ def _useSelection(func):
 def findRoot(nodeType= None):
 	"""
 	找出所有已選取物件在 outliner 裡各自的根物件。
-	@param nodeType: [list, string] 根物件型別。要找多種型別可用 list ，只找單型別可用 string 。
+	@param nodeType: [list, string] 根物件型別。要找多種型別可用 list，
+					只找單型別可用 string 。
 	"""
 	if nodeType is None:
 		nodeType = []
@@ -52,8 +54,9 @@ def findRoot(nodeType= None):
 	if seleList:
 		for obj in seleList:
 			root = obj.split('|')[1]
-			if root not in rootNodes and (cmds.objectType(root) in nodeType or nodeType == []):
-				rootNodes.append(root)
+			if root not in rootNodes:
+				if cmds.objectType(root) in nodeType or nodeType == []:
+					rootNodes.append(root)
 	else:
 		logger.warning('No designation, and no selection.')
 
@@ -76,7 +79,9 @@ def findHidden(node= None):
 
 def findType(nodeType, excludeType= None, node= None):
 	"""
-	列出選取物件或指定物件底下的特定型別子物件，或者列出選取物件或指定物件底下特定型別之外的子物件
+	列出選取物件或指定物件底下的特定型別子物件，
+	或者，
+	列出選取物件或指定物件底下特定型別之外的子物件
 	@param nodeType: [string] 物件型別
 	@param excludeType: [bool] include or exclude 預設為 False
 	@param node: [string] 物件名稱

@@ -116,20 +116,20 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 
 	# get list of items to process
 	rootNode_List = _getRootNode(assetName_override)
-	partial_Dict = {}.fromkeys(rootNode_List, [])
+	partialDict = {}.fromkeys(rootNode_List, [])
 
 	# partial mode
 	if isPartial:
 		# 取得局部選取範圍的物件清單並建立成字典
-		partial_Dict = moMethod.mPartialQueue(partial_Dict)
+		partialDict = moMethod.mPartialQueue(partialDict)
 
 		'''partial check
 		'''
 		logger.debug('GeoCache export in PARTIAL Mode.')
 		logger.debug('**********************************')
-		for rootNode in partial_Dict.keys():
+		for rootNode in partialDict.keys():
 			logger.debug('[' + rootNode + '] :')
-			for dag in partial_Dict[rootNode]:
+			for dag in partialDict[rootNode]:
 				logger.debug(dag)
 		logger.debug('**********************************')
 
@@ -146,7 +146,7 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 
 	# 作業開始，依序處理各個 asset
 	for rootNode in rootNode_List:
-		if isPartial and not partial_Dict[rootNode]:
+		if isPartial and not partialDict[rootNode]:
 			logger.info('No partial selection under [' + rootNode + '] .')
 			continue
 
@@ -172,10 +172,14 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 
 		if isPartial:
 			# 檢查過濾出來的物件是否在局部選取範圍中，並更新過濾清單
-			anim_viskey = [dag for dag in anim_viskey if dag.split('|')[-1].split(':')[-1] in partial_Dict[rootNode]]
-			anim_meshes = [dag for dag in anim_meshes if dag.split('|')[-1].split(':')[-1] in partial_Dict[rootNode]]
+			anim_viskey = [dag for dag in anim_viskey if dag.split('|')[-1].split(':')[-1] in partialDict[rootNode]]
+			anim_meshes = [dag for dag in anim_meshes if dag.split('|')[-1].split(':')[-1] in partialDict[rootNode]]
 
 		# return
+
+		''' exportLog
+		'''
+		exportLogDict = {}.fromkeys(['outKey', 'visKey', 'geo'], [])
 		
 		''' nodeOutput
 		'''
@@ -190,10 +194,13 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 			# collect all visibility animation node
 			outAniNodeDict = moMethod.mDuplicateOutkey(outNodeDict, assetNS)
 			# export outKey
+			outKeyList = []
 			for outAniNode in outAniNodeDict:
 				cmds.select(outAniNode, r= 1)
 				keyFile = moRules.rOutkeyFilePath(geoCacheDir, assetName, outAniNode, 1)
-				moMethod.mExportOutkey(keyFile, outAniNode, outAniNodeDict[outAniNode])
+				j = moMethod.mExportOutkey(keyFile, outAniNode, outAniNodeDict[outAniNode])
+				outKeyList.append(os.path.basename(j))
+			exportLogDict['outKey'] = outKeyList
 			# remove mGCVisKey namespace
 			logger.info('nodeOutNS: <' + nodeOutNS + '> Del.')
 			moMethod.mCleanWorkingNS(nodeOutNS)
@@ -216,10 +223,13 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 			# duplicate and collect all baked visibility animation node
 			visAniNodeList = moMethod.mDuplicateViskey(anim_viskey)
 			# export visKey
+			visKeyList = []
 			for visAniNode in visAniNodeList:
 				cmds.select(visAniNode, r= 1)
 				keyFile = moRules.rViskeyFilePath(geoCacheDir, assetName, anim_viskey[visAniNodeList.index(visAniNode)], 1)
 				moMethod.mExportViskey(keyFile)
+				visKeyList.append(os.path.basename(keyFile))
+			exportLogDict['visKey'] = visKeyList
 			# remove mGCVisKey namespace
 			logger.info('viskeyNS: <' + viskeyNS + '> Del.')
 			moMethod.mCleanWorkingNS(viskeyNS)
@@ -239,7 +249,8 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 			moMethod.mSetupWorkingNS(rigkeyNS)
 			# duplicate ctrls
 			cmds.select(rigCtrlList, r= 1)
-			rigCtrlList = moMethod.mDuplicateSelectedOnly(1)
+			rigkeyGrpName = moRules.rRigkeyGrpName()
+			rigCtrlList = moMethod.mDuplicateSelectedOnly(rigkeyGrpName, 1)
 			# bake rigging ctrls
 			moMethod.mBakeRigkey(rigCtrlList, playbackRange)
 			# export baked rigging ctrls
@@ -271,10 +282,13 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 					if ((ves.split(':')[-1] in smoothMask) + smoothExclusive) % 2:
 						moMethod.mSmoothMesh(ves, subdivLevel)
 			# write out transform node's name
+			geoList = []
 			for ves in cmds.listRelatives(ves_grp, c= 1):
 				vesShape = cmds.listRelatives(ves, s= 1)[0]
 				geoListFile = moRules.rGeoListFilePath(geoCacheDir, assetName, ves, vesShape, geoFileType, 1)
 				moMethod.mSaveGeoList(geoListFile)
+				geoList.append(os.path.basename(geoListFile))
+			exportLogDict['geo'] = geoList
 			# export GeoCache
 			_suppressWarn(1)
 			logger.info('Asset [' + assetName + '] ready to start caching.')
@@ -288,10 +302,17 @@ def exportGeoCache(subdivLevel= None, isPartial= None, isStatic= None, assetName
 		else:
 			logger.warning('No mesh to cache.')
 
+		''' timeInfo
+		'''
 		# note down frameRate and playback range
 		timeInfoFile = moRules.rTimeInfoFilePath(geoCacheDir, assetName, 1)
 		moMethod.mExportTimeInfo(timeInfoFile, timeUnit, playbackRange_keep, isStatic)
 		logger.info('TimeInfo exported.')
+
+		# write export log
+		logPath = moRules.rExportLogPath(geoCacheDir, assetName, 1)
+		moMethod.mExportLogDump(logPath, exportLogDict, isPartial)
+		logger.info('Export log dumped.')
 
 		logger.info('[' + rootNode + '] geoCached.')
 		logger.info(geoCacheDir)
@@ -335,20 +356,20 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 
 	# get list of items to process
 	rootNode_List = _getRootNode(assetName_override)
-	partial_Dict = {}.fromkeys(rootNode_List, [])
+	partialDict = {}.fromkeys(rootNode_List, [])
 
 	# partial mode
 	if isPartial:
 		# 取得局部選取範圍的物件清單並建立成字典
-		partial_Dict = moMethod.mPartialQueue(partial_Dict)
+		partialDict = moMethod.mPartialQueue(partialDict)
 
 		'''partial check
 		'''
 		logger.warning('GeoCache import in PARTIAL Mode.')
 		logger.debug('**********************************')
-		for rootNode in partial_Dict.keys():
+		for rootNode in partialDict.keys():
 			logger.debug('[' + rootNode + '] :')
-			for dag in partial_Dict[rootNode]:
+			for dag in partialDict[rootNode]:
 				logger.debug(dag)
 		logger.debug('**********************************')
 
@@ -357,7 +378,7 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 
 	# 作業開始，依序處理各個 asset
 	for rootNode in rootNode_List:
-		if isPartial and not partial_Dict[rootNode]:
+		if isPartial and not partialDict[rootNode]:
 			logger.debug('No partial selection under [' + rootNode + '] .')
 			continue
 
@@ -377,30 +398,41 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 			logger.warning('[' + rootNode + '] geoCacheDir not exists -> ' + geoCacheDir)
 			continue
 
+		''' exportLog
+		'''
+		logPath = moRules.rExportLogPath(geoCacheDir, assetName)
+		exportLogDict = moMethod.mExportLogRead(logPath)
+		if not exportLogDict:
+			logger.critical('[' + rootNode + '] export log load failed.\n' \
+							+ 'No import will be proceed.')
+			continue
+
+		''' timeInfo
+		'''
 		# go set frameRate and playback range
 		timeInfoFile = moRules.rTimeInfoFilePath(geoCacheDir, assetName)
 		if cmds.file(timeInfoFile, q= 1, ex= 1):
 			staticInfo = moMethod.mImportTimeInfo(timeInfoFile)
 			logger.info('TimeInfo imported.')
 		else:
-			logger.warning('[' + rootNode + '] TimeInfo not exists.')
+			logger.critical('[' + rootNode + '] TimeInfo not exists.')
 
 		''' geoCache
 		'''
 		geoListDir = moRules.rGeoListFilePath(geoCacheDir)
-		anim_geoDict = moMethod.mLoadGeoList(geoListDir, workingNS, geoFileType)
+		anim_geoDict = moMethod.mLoadGeoList(exportLogDict, geoListDir, workingNS, geoFileType)
 		if anim_geoDict:
-			anim_transList = anim_geoDict.keys()
-			anim_transList.sort()
+			animTranList = anim_geoDict.keys()
+			animTranList.sort()
 			if isPartial:
-				anim_transList = [ dag for dag in anim_transList if dag in partial_Dict[rootNode] ]
+				animTranList = [ dag for dag in animTranList if dag in partialDict[rootNode] ]
 			# import GeoCache
-			for anim_trans in anim_transList:
-				anim_shape = anim_geoDict[anim_trans]
+			for animTran in animTranList:
+				anim_shape = anim_geoDict[animTran]
 				xmlFile = moRules.rXMLFilePath(geoCacheDir, moRules.rXMLFileName(assetName, workingNS, anim_shape))
 				if cmds.file(xmlFile, q= 1, ex= 1):
 					logger.info('[' + rootNode + '] XML Loading...  ' + xmlFile.split(workRoot)[-1])
-					moMethod.mImportGeoCache(xmlFile, assetNS, anim_trans, conflictList, ignorDuplicateName, staticInfo)
+					moMethod.mImportGeoCache(xmlFile, assetNS, animTran, conflictList, ignorDuplicateName, staticInfo)
 				else:
 					logger.warning('[' + rootNode + '] XML not exists -> ' + xmlFile)
 		else:
@@ -410,7 +442,7 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 		''' nodeOutput
 		'''
 		outKeyDir = moRules.rOutkeyFilePath(geoCacheDir)
-		outAniNodeList = moMethod.mLoadOutKeyList(outKeyDir, '_input.json')
+		outAniNodeList = moMethod.mLoadOutKeyList(exportLogDict, outKeyDir, '_input.json')
 		if not isPartial:
 			if outAniNodeList:
 				logger.info('nodeOutNS: <' + nodeOutNS + '> Del.')
@@ -430,10 +462,10 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 		''' visibility
 		'''
 		visKeyDir = moRules.rViskeyFilePath(geoCacheDir)
-		visAniNodeList = moMethod.mLoadVisKeyList(visKeyDir, '_visKeys.ma')
+		visAniNodeList = moMethod.mLoadVisKeyList(exportLogDict, visKeyDir, '_visKeys.ma')
 		if visAniNodeList:
 			if isPartial:
-				visAniNodeList = [ dag for dag in visAniNodeList if dag in partial_Dict[rootNode] ]
+				visAniNodeList = [ dag for dag in visAniNodeList if dag in partialDict[rootNode] ]
 			else:
 				logger.info('viskeyNS: <' + viskeyNS + '> Del.')
 				# remove mGCVisKey namespace
@@ -462,7 +494,8 @@ def importGeoCache(sceneName, isPartial= None, assetName_override= None, ignorDu
 
 		logger.info('[' + rootNode + ']' + (' PARTIAL' if isPartial else '') + ' imported.')
 
-		# check wrap
+		''' wrap
+		'''
 		didWrap = [] if didWrap is None else didWrap
 		wrapDict = moMethod.mGetWrappingList(assetName)
 		if not isPartial and wrapDict:

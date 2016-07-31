@@ -12,7 +12,8 @@ THEME = {logging.CRITICAL: ' [FATAL] ',
 class MLog:
 	def __init__(self, loggerName, noColor= None, lvl=logging.DEBUG):
 		if not noColor:
-			f = ' %(log_color)s%(styledname)-8s%(reset)s| %(log_color)s%(message)s%(reset)s'
+			f = ' %(log_color)s%(styledname)-8s%(reset)s|' \
+			  + ' %(log_color)s%(message)s%(reset)s'
 			self.formatter = colorlog.ColoredFormatter(f,
 				log_colors={
 					'DEBUG':    'cyan',
@@ -38,32 +39,37 @@ class MLog:
 
 	def critical(self, message, *args, **kwargs):
 		for i, line in enumerate(str(message).splitlines()):
+			key = logging.CRITICAL if i == 0 else 'nextLine'
 			self.logger.critical(line,
-								 extra={"styledname": self.theme[logging.CRITICAL if i == 0 else 'nextLine']},
+								 extra={"styledname": self.theme[key]},
 								 *args, **kwargs)
 	crit = c = fatal = critical
 	def error(self, message, *args, **kwargs):
 		for i, line in enumerate(str(message).splitlines()):
+			key = logging.ERROR if i == 0 else 'nextLine'
 			self.logger.error(line,
-							  extra={"styledname": self.theme[logging.ERROR if i == 0 else 'nextLine']},
+							  extra={"styledname": self.theme[key]},
 							  *args, **kwargs)
 	err = e = error
 	def warn(self, message, *args, **kwargs):
 		for i, line in enumerate(str(message).splitlines()):
+			key = logging.WARNING if i == 0 else 'nextLine'
 			self.logger.warn(line,
-							 extra={"styledname": self.theme[logging.WARNING if i == 0 else 'nextLine']},
+							 extra={"styledname": self.theme[key]},
 							 *args, **kwargs)
 	warning = w = warn
 	def info(self, message, *args, **kwargs):
 		for i, line in enumerate(str(message).splitlines()):
+			key = logging.INFO if i == 0 else 'nextLine'
 			self.logger.info(line,
-							 extra={"styledname": self.theme[logging.INFO if i == 0 else 'nextLine']},
+							 extra={"styledname": self.theme[key]},
 							 *args, **kwargs)
 	inf = nfo = i = info
 	def debug(self, message, *args, **kwargs):
 		for i, line in enumerate(str(message).splitlines()):
+			key = logging.DEBUG if i == 0 else 'nextLine'
 			self.logger.debug(line,
-							  extra={"styledname": self.theme[logging.DEBUG if i == 0 else 'nextLine']},
+							  extra={"styledname": self.theme[key]},
 							  *args, **kwargs)
 	dbg = d = debug
 

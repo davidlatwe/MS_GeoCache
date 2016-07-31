@@ -81,9 +81,11 @@ def main(projPath, filePath, assetList, paramDict):
 		logger.info('GeoCache Done.')
 		logger.info(_processEndMsg(fileName, 'Export Done.'))
 	elif result == 1:
-		logger.critical(_processEndMsg(fileName, 'Export Fail. [moGeoCache] fileRule missing.'))
+		logger.critical(_processEndMsg(fileName, 'Export Fail. ' \
+			+ '[moGeoCache] fileRule missing.'))
 	else:
-		logger.critical(_processEndMsg(fileName, 'Export Might Fail. Something went wrong.'))
+		logger.critical(_processEndMsg(fileName, 'Export Might Fail. ' \
+			+ 'Something went wrong.'))
 
 if __name__ == '__main__':
 	# 取得 package 路徑並置入 sys.path

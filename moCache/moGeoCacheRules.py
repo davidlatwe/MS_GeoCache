@@ -27,25 +27,31 @@ def rCurrentSceneName():
 def rWorkingNS():
 	"""
 	"""
-	return ':moGeoCache'
+	return ':moGC'
 
 
 def rViskeyNS():
 	"""
 	"""
-	return ':moGeoCacheViskey'
+	return ':moGCViskey'
 
 
 def rNodeOutNS():
 	"""
 	"""
-	return ':moNodeOutkey'
+	return ':moGCOutkey'
 
 
 def rRigkeyNS():
 	"""
 	"""
-	return ':moGeoCacheRigkey'
+	return ':moGCRigkey'
+
+
+def rRigkeyGrpName():
+	"""
+	"""
+	return 'moGCRigGrp'
 
 
 def rGeoFileType():
@@ -138,48 +144,59 @@ def rXMLFilePath(geoCacheDir, xmlFileName):
 	return geoCacheDir + sInfo.sep + xmlFileName + '.xml'
 
 
-def rGeoListFilePath(geoCacheDir, assetName= None, ves= None, vesShape= None, geoFileType= None, makeDir= None):
+def rGeoListFilePath(geoCacheDir, assetName= None, ves= None, vesShape= None,
+	geoFileType= None, makeDir= None):
 	"""
 	"""
 	sInfo = _getSceneInfo()
 	if assetName and ves and vesShape and geoFileType:
-		fileName = assetName + '_' + vesShape.replace(':', '_') + '@' + ves.split(':')[-1] + geoFileType
+		fileName = assetName + '_' + vesShape.replace(':', '_') + '@' \
+				 + ves.split(':')[-1] + geoFileType
 	else:
 		fileName = ''
 	filePath = geoCacheDir + sInfo.sep + 'moGeoList' + sInfo.sep \
 			 + fileName
 	if makeDir:
 		sInfo.makeDir(filePath, 1)
+	
 	return filePath
 
 
-def rViskeyFilePath(geoCacheDir, assetName= None, visAniNode= None, makeDir= None):
+def rViskeyFilePath(geoCacheDir, assetName= None, visAniNode= None,
+	makeDir= None):
 	"""
 	"""
 	sInfo = _getSceneInfo()
 	if assetName and visAniNode:
-		fileName = assetName + '@' + visAniNode.split(':')[-1].split('|')[-1] + '_visKeys.ma'
+		fileName = assetName + '@' \
+				 + visAniNode.split(':')[-1].split('|')[-1] \
+				 + '_visKeys.ma'
 	else:
 		fileName = ''
 	filePath = geoCacheDir + sInfo.sep + 'moViskey' + sInfo.sep \
 			 + fileName
 	if makeDir:
 		sInfo.makeDir(filePath, 1)
+
 	return filePath
 
 
-def rOutkeyFilePath(geoCacheDir, assetName= None, outAniNode= None, makeDir= None):
+def rOutkeyFilePath(geoCacheDir, assetName= None, outAniNode= None,
+	makeDir= None):
 	"""
 	"""
 	sInfo = _getSceneInfo()
 	if assetName and outAniNode:
-		fileName = assetName + '@' + outAniNode.split(':')[-1].split('|')[-1] + '_outKeys.ma'
+		fileName = assetName + '@' \
+				 + outAniNode.split(':')[-1].split('|')[-1] \
+				 + '_outKeys.ma'
 	else:
 		fileName = ''
 	filePath = geoCacheDir + sInfo.sep + 'moOutkey' + sInfo.sep \
 			 + fileName
 	if makeDir:
 		sInfo.makeDir(filePath, 1)
+
 	return filePath
 
 
@@ -195,6 +212,7 @@ def rRigkeyFilePath(geoCacheDir, assetName= None, makeDir= None):
 			 + fileName
 	if makeDir:
 		sInfo.makeDir(filePath, 1)
+
 	return filePath
 
 
@@ -210,4 +228,21 @@ def rTimeInfoFilePath(geoCacheDir, assetName= None, makeDir= None):
 			 + fileName
 	if makeDir:
 		sInfo.makeDir(filePath, 1)
+
+	return filePath
+
+
+def rExportLogPath(geoCacheDir, assetName= None, makeDir= None):
+	"""
+	"""
+	sInfo = _getSceneInfo()
+	if assetName:
+		fileName = assetName + '_exportLog.json'
+	else:
+		fileName = ''
+	filePath = geoCacheDir + sInfo.sep + 'moExportLog' + sInfo.sep \
+			 + fileName
+	if makeDir:
+		sInfo.makeDir(filePath, 1)
+
 	return filePath

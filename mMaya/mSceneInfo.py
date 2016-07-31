@@ -10,7 +10,8 @@ import maya.mel as mel
 import mMaya.mGeneral as mGeneral; reload(mGeneral)
 import mLogger; reload(mLogger)
 exc = os.path.basename(sys.executable)
-logger = mLogger.MLog('moGC.mMaya.mSceneInfo', False if exc == 'mayapy.exe' else True)
+logger = mLogger.MLog('moGC.mMaya.sInfo',
+					False if exc == 'mayapy.exe' else True)
 
 
 class SceneInfo(object):
