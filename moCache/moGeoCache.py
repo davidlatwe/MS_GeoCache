@@ -753,3 +753,65 @@ def importGPUCache(sceneName, assetList):
 
 	logger.info('GPU Cache import completed.')
 	return 0
+
+
+def gpuProxyReferencing(sceneName, assetName_override= None):
+	"""
+	製作 GPU Proxy Referencing
+	@param    sceneName - geoCache 來源的場景名稱，用以對應
+	@param  assetName_override - 輸出過程用此取代該 物件 原本的 assetName
+	"""
+	# 檢查 GeoCache 根路徑
+	logger.debug('Checking [moGeoCache] fileRule.')
+	geoRootPath = getGeoCacheRoot()
+	if not geoRootPath:
+		logger.critical('Procedure has to stop due to ' \
+			+ 'export root dir not exists.\n' \
+			+ 'Must add [moGeoCache] fileRule in your workspace.')
+		return 1
+	else:
+		logger.debug('FileRule [moGeoCache] exists.')
+
+	logger.info('Proxy referencing init.')
+
+	# get list of items to process
+	rootNode = _getRootNode(assetName_override)[-1]
+
+	# 作業開始，處理 asset
+	''' vars
+	'''
+	assetNS = moRules.rAssetNS(rootNode)
+	assetName = moRules.rAssetName(assetNS) if not assetName_override \
+		else assetName_override
+	geoCacheDir = getGeoCacheDir(geoRootPath, assetName, 0, sceneName)
+
+	logger.info('AssetName: [' + assetName + ']')
+
+	# return
+	''' save geoCache
+	'''
+	#cmds.file(s= 1)
+
+	''' export gpu
+	'''
+	cmds.select(rootNode, r= 1)
+	moGeoCache.exportGPUCache(sceneName, assetName_override)
+
+	''' import gpu
+	'''
+	cmds.file(new= 1, f= 1)
+	importGPUCache(sceneName, [assetName])
+
+	''' save gpu
+	'''
+	#cmds.file(s= 1)
+
+	''' proxyReferencing
+	'''
+	cmds.file(new= 1, f= 1)
+	# ref geo
+	# proxy gpu
+
+	''' save proxRef
+	'''
+	#cmds.file(s= 1)
