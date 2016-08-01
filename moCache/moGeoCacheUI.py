@@ -25,9 +25,15 @@ def exec_getParams(*args):
 	global cBox_dupName
 	global textF_filter
 	global rbtn_execBy
+	global rbtn_execDo
+
+	mode = radioButtonGrp(rbtn_geoIO, q= 1, sl= 1)
 	
 	conflictList = str(textField(textF_filter, q= 1, tx= 1))
-	assetName_override = str(textField(textF_assetName, q= 1, tx= 1))
+	if mode == 1:
+		assetName_override = str(textField(textF_assetName, q= 1, tx= 1))
+	if mode == 2:
+		assetName_override = str(text(txt_infoAssetName, q= 1, l= 1))
 	assetListStr = text(txt_infoAssetName, q= 1, l= 1)
 	paramDict = {
 		'assetName' : assetName_override if assetName_override else None,
@@ -41,12 +47,12 @@ def exec_getParams(*args):
 	}
 
 	if exec_checkParam(paramDict):
-		mode = radioButtonGrp(rbtn_geoIO, q= 1, sl= 1)
-		actionType = radioButtonGrp(rbtn_execBy, q= 1, sl= 1)
 		if mode == 1:
+			actionType = radioButtonGrp(rbtn_execBy, q= 1, sl= 1)
 			exec_Export(actionType, paramDict)
 		if mode == 2:
-			exec_Import(2, paramDict)
+			actionType = radioButtonGrp(rbtn_execDo, q= 1, sl= 1)
+			exec_Import(actionType, paramDict)
 
 
 def exec_checkParam(paramDict):
@@ -107,13 +113,6 @@ def exec_Import(actionType, paramDict):
 	"""
 	"""
 	if actionType == 1:
-		pass
-	if actionType == 2:
-		moGeoCache.importGPUCache(
-			sceneName= paramDict['sceneName'],
-			assetList= paramDict['assetList']
-			)
-		'''
 		moGeoCache.importGeoCache(
 			sceneName= paramDict['sceneName'],
 			isPartial= paramDict['isPartial'],
@@ -121,6 +120,28 @@ def exec_Import(actionType, paramDict):
 			ignorDuplicateName= paramDict['sameName'],
 			conflictList= paramDict['conflict']
 			)
+	if actionType == 2:
+		'''
+		save geo to cacheDir as M
+		
+		moGeoCache.exportGPUCache(
+			sceneName= paramDict['sceneName'],
+			assetName_override= paramDict['assetName']
+			)
+		
+		new file
+		'''
+		moGeoCache.importGPUCache(
+			sceneName= paramDict['sceneName'],
+			assetList= paramDict['assetList']
+			)
+		'''
+		save gpu
+
+		new file
+		ref geo
+		proxy gpu
+		save
 		'''
 	if actionType == 3:
 		pass
@@ -288,15 +309,18 @@ def ui_getSmoothExclusive():
 def ui_getAssetName():
 	"""
 	"""
-	if ls(sl= 1):
-		if not textField(textF_assetName, q= 1, tx= 1):
-			assetList = moGeoCache.getAssetList()
-			text(txt_infoAssetName, e= 1, l= ', '.join(assetList))
+	global rbtn_geoIO
+
+	if radioButtonGrp(rbtn_geoIO, q= 1, sl= 1) == 1:
+		if ls(sl= 1):
+			if not textField(textF_assetName, q= 1, tx= 1):
+				assetList = moGeoCache.getAssetList()
+				text(txt_infoAssetName, e= 1, l= ', '.join(assetList))
+			else:
+				warning('AssetName has override, only the last rootNode will be processed.')
+				text(txt_infoAssetName, e= 1, l= textField(textF_assetName, q= 1, tx= 1))
 		else:
-			warning('AssetName has override, only the last rootNode will be processed.')
-			text(txt_infoAssetName, e= 1, l= textField(textF_assetName, q= 1, tx= 1))
-	else:
-		text(txt_infoAssetName, e= 1, l= '')
+			text(txt_infoAssetName, e= 1, l= '')
 
 
 def ui_getSceneName():
@@ -391,6 +415,7 @@ def ui_geoCache(midValue):
 	global cBox_dupName
 	global textF_filter
 	global rbtn_execBy
+	global rbtn_execDo
 
 	frameLayout(l= ' GeoCaching  -  A N I   S I M   G E O')
 	columnLayout(adj= 1)
@@ -437,10 +462,15 @@ def ui_geoCache(midValue):
 				text(l= '', w= midValue)
 				cBox_isPartial = checkBox(l= 'Partial Export')
 				setParent('..')
-			rowLayout(nc= 2, adj= 2)
+			row_textFAss = rowLayout(nc= 2, adj= 2)
 			if True:
-				txt_assetName = text('Asset ', al= 'right', w= midValue)
+				text('Asset ', al= 'right', w= midValue)
 				textF_assetName = textField(pht= 'assetName override')
+				setParent('..')
+			row_optnMAss = rowLayout(nc= 2, adj= 2, vis= 0)
+			if True:
+				text('Asset ', al= 'right', w= midValue)
+				optnM_assetName = optionMenu(l= '')
 				setParent('..')
 			setParent('..')
 
@@ -458,14 +488,6 @@ def ui_geoCache(midValue):
 				text(l= '', w= midValue)
 				cBox_isStatic = checkBox(l= 'Static Object')
 				setParent('..')
-			'''
-			rowLayout(nc= 3, adj= 3, h= 22)
-			if True:
-				text(l= '( 0~4 ) ', al= 'right', en= 0, w= midValue)
-				intF_division = intFieldGrp(l= '', v1= 0, ad2= 1, cw= [2, 36], w= 40, en= en)
-				tex_division = text(l= 'Division Smooth', al= 'left', en= en)
-				setParent('..')
-			'''
 			rowLayout(nc= 2, adj= 2)
 			if True:
 				text(l= '', w= midValue)
@@ -515,12 +537,19 @@ def ui_geoCache(midValue):
 				tex_act = text(l= 'Action', al= 'center', fn= 'boldLabelFont', w= 40, en= 1)
 				separator(h= 10, st= 'double', en= 0)
 				setParent('..')
-			rowLayout(nc= 2, adj= 2)
+			row_ExpAct = rowLayout(nc= 2, adj= 2)
 			if True:
 				text(l= 'By : ', al= 'right', w= actValue)
 				rbtn_execBy = radioButtonGrp(nrb= 3, l='', cw4= [5, 55, 50, 60], h= 30,
 					cl4= ['right', 'left', 'left', 'left'],
 					la3= ['CMD', 'GUI', 'deadline'], sl= 1)
+				setParent('..')
+			row_ImpAct = rowLayout(nc= 2, adj= 2, vis= 0)
+			if True:
+				text(l= 'Do : ', al= 'right', w= actValue)
+				rbtn_execDo = radioButtonGrp(nrb= 2, l='', cw3= [5, 55, 110], h= 30,
+					cl3= ['right', 'left', 'left'],
+					la2= ['GEO', 'GPU + Reference'], sl= 1)
 				setParent('..')
 
 			text(l= '', h= 5)
@@ -531,28 +560,34 @@ def ui_geoCache(midValue):
 	setParent('..')
 
 	# commands
-	'''
-	def intcmd_setMinMax(*args):
-		global intF_division
-		intvalue = intFieldGrp(intF_division, q= 1, v1= 1)
-		if intvalue < 0:
-			intFieldGrp(intF_division, e= 1, v1= 0)
-		if intvalue > 4:
-			intFieldGrp(intF_division, e= 1, v1= 4)
-
-	intFieldGrp(intF_division, e= 1, cc= intcmd_setMinMax)
-	'''
+	def getAssetListFromGeoRootDir():
+		for c in optionMenu(optnM_assetName, q= 1, ill= 1):
+			deleteUI(c)
+		geoDir = moGeoCache.getGeoCacheRoot()
+		isF = lambda d, f: os.path.isfile(os.path.join(d,f))
+		dirList = [f for f in os.listdir(geoDir) if not isF(geoDir, f)]
+		for d in dirList:
+			menuItem(l= d, p= optnM_assetName)
+		text(txt_infoAssetName, e= 1, l= dirList[0])
 
 	def geoCacheIOctrlSwitch(col, vis, *args):
 		layout(col, e= 1, vis= vis)
 		if col == col_exp and vis:
-			columnLayout(col_action, e= 1, en= 1)
+			rowLayout(row_ExpAct, e= 1, vis= 1)
+			rowLayout(row_ImpAct, e= 1, vis= 0)
+			rowLayout(row_textFAss, e= 1, vis= 1)
+			rowLayout(row_optnMAss, e= 1, vis= 0)
 			checkBox(cBox_isPartial, e= 1, l= 'Partial Export')
 			ui_getSceneName()
+			ui_getAssetName()
 		if col == col_imp and vis:
-			columnLayout(col_action, e= 1, en= 0)
+			rowLayout(row_ExpAct, e= 1, vis= 0)
+			rowLayout(row_ImpAct, e= 1, vis= 1)
+			rowLayout(row_textFAss, e= 1, vis= 0)
+			rowLayout(row_optnMAss, e= 1, vis= 1)
 			checkBox(cBox_isPartial, e= 1, l= 'Partial Import')
 			text(txt_infoSceneName, e= 1, l= textField(textF_choose, q= 1, tx= 1))
+			getAssetListFromGeoRootDir()
 
 	radioButtonGrp(rbtn_geoIO, e= 1,
 			of1= partial(geoCacheIOctrlSwitch, col_exp, 0),
@@ -570,14 +605,23 @@ def ui_geoCache(midValue):
 			if str(textField(source, q= 1, pht= 1)).startswith('scene'):
 				ui_getSceneName()
 
+	def optionMenuSync(source, target, *args):
+		s = optionMenu(source, q= 1, v= 1)
+		if s:
+			text(target, e= 1, l= s)
+		else:
+			text(target, e= 1, l= '')
+
 	textField(textF_assetName, e= 1, cc= partial(textFieldSync, textF_assetName, txt_infoAssetName))
 	textField(textF_sceneName, e= 1, cc= partial(textFieldSync, textF_sceneName, txt_infoSceneName))
 	textField(textF_choose, e= 1, cc= partial(textFieldSync, textF_choose, txt_infoSceneName))
+	optionMenu(optnM_assetName, e= 1, cc= partial(optionMenuSync, optnM_assetName, txt_infoAssetName))
 
 	def openCacheFolder(*args):
 		assetName = text(txt_infoAssetName, q= 1, l= 1)
 		msg = ''
 		if assetName:
+			assetName = [ast.strip() for ast in assetName.split(',')][-1]
 			geoCacheRoot = moGeoCache.getGeoCacheRoot()
 			geoCacheDir = geoCacheRoot + '/' + assetName
 			if os.path.exists(geoCacheDir):
@@ -593,7 +637,7 @@ def ui_geoCache(midValue):
 				msg = u'唉。Asset [ ' + assetName + u' ] 並不存在於 moGeoCache 資料夾中，\n' \
 					+ u'可能是從未輸出 GeoCache 過吧。'
 		else:
-			msg = u'請先選取一個 Asset，好嗎 ?'
+			msg = u'請先選取或輸入一個 Asset，好嗎 ?'
 		if msg:
 			confirmDialog(t= u'警告你喔', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 
@@ -609,7 +653,7 @@ def ui_main():
 	if window(windowName, q= 1, ex= 1):
 		deleteUI(windowName)
 
-	window(windowName, t= 'GeoCache Settings', s= 1, mxb= 0, mnb= 0)
+	window(windowName, t= 'GeoCache Settings', s= 0, mxb= 0, mnb= 0)
 	main_column = columnLayout(adj= 1)
 	# geoCache
 	ui_initPrep(50)
@@ -625,5 +669,5 @@ def ui_main():
 	ui_getSmoothExclusive()
 
 	#cmds.window('ms_GeoCache_uiMain', q= 1, h= 1)
-	window(windowName, e= 1, h= 512, w= 270)
+	window(windowName, e= 1, h= 531, w= 270)
 	showWindow(windowName)

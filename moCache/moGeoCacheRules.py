@@ -268,3 +268,19 @@ def rExportLogPath(geoCacheDir, assetName= None, makeDir= None):
 		sInfo.makeDir(filePath, 1)
 
 	return filePath
+
+
+def rGPULogPath(geoCacheDir, assetName= None, makeDir= None):
+	"""
+	"""
+	sInfo = _getSceneInfo()
+	if assetName:
+		fileName = assetName + '_gpuLog.json'
+	else:
+		fileName = ''
+	filePath = geoCacheDir + sInfo.sep + 'moGPULog' + sInfo.sep \
+			 + fileName
+	if makeDir:
+		sInfo.makeDir(filePath, 1)
+
+	return filePath

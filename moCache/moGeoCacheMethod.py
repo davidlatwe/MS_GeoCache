@@ -735,25 +735,31 @@ def mImportGeoCache(xmlFile, assetNS, animTran, conflictList,
 
 def mExportGPUCache(ves_grp, playbackRange, gpuName):
 	"""
+	輸出 GPU cache, 目前為多檔案輸出
+	多檔案輸出時, saveMultipleFiles= True, 以及使用 filePrefix
+	單檔案輸出時, saveMultipleFiles= False, 使用 fileName
 	"""
 	ves_member = cmds.listRelatives(ves_grp, c= 1)
 	st = playbackRange[0]
 	et = playbackRange[1]
 	dirPath = os.path.dirname(gpuName)
-	fileName = os.path.basename(gpuName)
+	single = ''
+	prefix = os.path.basename(gpuName)
 	result = cmds.gpuCache(ves_member, startTime= st, endTime= et,
 						optimize= 1, optimizationThreshold= 40000,
 						writeMaterials= 1, dataFormat= 'ogawa',
-						directory= dirPath, filePrefix= fileName)
+						saveMultipleFiles= True,
+						directory= dirPath,
+						filePrefix= prefix, fileName= single)
 	return result
 
 
-def mImportGPUCache(gpuListDir, gpuFile, gpuGrp, assetName, gpuNS, workingNS):
+def mImportGPUCache(gpuListDir, gpuFile, gpuGrp, assetName, gpuNS):
 	"""
 	"""
 	gpuNS = ':' + assetName + gpuNS + ':'
 	gpuBase = gpuFile.split('.')[0]
-	gpuNode = gpuNS + 'gpu' + gpuBase.split(workingNS.split(':')[-1])[1]
+	gpuNode = gpuNS + 'gpu' + gpuBase.split('_GPU_')[1]
 	gpuPath = gpuListDir.replace(os.path.basename(gpuListDir), gpuFile)
 	gpuShape = pm.createNode('gpuCache', n= gpuNode + 'Shape')
 	gpuTrans = gpuShape.getParent().rename(gpuNode).setParent(gpuGrp)
@@ -786,7 +792,7 @@ def mImportTimeInfo(timeInfoFile):
 		return [isStatic, float(timeInfo[1].split(':')[1])]
 
 
-def mExportLogDump(logPath, exportLogDict, isPartial):
+def mExportLogDump(logPath, exportLogDict, isPartial= None):
 	"""
 	"""
 	if isPartial:

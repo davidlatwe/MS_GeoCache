@@ -371,6 +371,8 @@ def importGeoCache(
 
 	logger.info('GeoCache import init.')
 
+	# 檢查是否有 Wrap 要執行(或者丟到 tmp ?)
+
 	# namespace during action
 	workingNS = moRules.rWorkingNS()
 	viskeyNS = moRules.rViskeyNS()
@@ -587,16 +589,18 @@ def importGeoCache(
 					+ ' Starting cache wrapped object.')
 				cmds.select(wTargetBat, r= 1)
 				exportGeoCache(
-					isPartial= True, assetName_override= assetName_override)
+					isPartial= True,
+					assetName_override= assetName_override,
+					sceneName_override= sceneName)
 				logger.info('[' + rootNode + ']' \
 					+ ' Removing cached source.')
 				moMethod.mRemoveWrap(wBatchDict.keys(), wTargetBat)
 				logger.info('[' + rootNode + ']' \
 					+ ' Starting import cached wrap source.')
-				sName = moRules.rCurrentSceneName()
+				#sName = moRules.rCurrentSceneName()
 				cmds.select(wTargetBat, r= 1)
 				importGeoCache(
-					sName, True, assetName_override, ignorDuplicateName,
+					sceneName, True, assetName_override, ignorDuplicateName,
 					conflictList, willWrap)
 
 	logger.info('GeoCache' + (' PARTIAL' if isPartial else '') \
@@ -604,8 +608,11 @@ def importGeoCache(
 	return 0
 
 
-def exportGPUCache():
+def exportGPUCache(sceneName, assetName_override= None):
 	"""
+	輸出 GPU Cache
+	@param    sceneName - geoCache 來源的場景名稱，用以對應
+	@param  assetName_override - 輸出過程用此取代該 物件 原本的 assetName
 	"""
 	# 檢查 GeoCache 根路徑
 	logger.debug('Checking [moGeoCache] fileRule.')
@@ -620,17 +627,46 @@ def exportGPUCache():
 
 	logger.info('GPU Cache export init.')
 
+	# get playback range
+	playbackRange = moRules.rPlaybackRange()
+
 	# get list of items to process
 	rootNode_List = _getRootNode(assetName_override)
 
 	# 作業開始，依序處理各個 asset
 	for rootNode in rootNode_List:
+
+		''' vars
+		'''
+		assetNS = moRules.rAssetNS(rootNode)
+		assetName = moRules.rAssetName(assetNS) if not assetName_override \
+			else assetName_override
+		geoCacheDir = getGeoCacheDir(geoRootPath, assetName, 0, sceneName)
+
+		logger.info('AssetName: [' + assetName + ']')
+
+		# return
+
+		''' gpuLog
+		'''
+		gpuLogDict = {}.fromkeys(['gpu'], [])
+
+		''' GPU
+		'''
 		# export GPU
 		logger.info('Asset [' + assetName + '] gpu caching.')
 		gpuName = moRules.rGPUFilePath(geoCacheDir, assetName, 1)
-		gpuABC = moMethod.mExportGPUCache(ves_grp, playbackRange, gpuName)
-		exportLogDict['gpu'] = [os.path.basename(abc) for abc in gpuABC]
+		gpuABC = moMethod.mExportGPUCache(rootNode, playbackRange, gpuName)
+		gpuLogDict['gpu'] = [os.path.basename(abc) for abc in gpuABC]
 		logger.debug('\n'.join(gpuABC))
+
+		# write export log
+		logPath = moRules.rGPULogPath(geoCacheDir, assetName, 1)
+		moMethod.mExportLogDump(logPath, gpuLogDict)
+		logger.info('Export log dumped.')
+
+		logger.info('[' + rootNode + '] geoCached.')
+		logger.info(geoCacheDir)
 
 	logger.info('GPU Cache export completed.')
 	return 0
@@ -638,8 +674,8 @@ def exportGPUCache():
 
 def importGPUCache(sceneName, assetList):
 	"""
-	輸入 gpuCache
-	@param    sceneName - gpuCache 來源的場景名稱
+	輸入 GPU Cache
+	@param    sceneName - GPU Cache 來源的場景名稱
 	@param	  assetList - 需要 import 的 asset 清單
 	"""
 	# 檢查 GeoCache 根路徑
@@ -678,9 +714,9 @@ def importGPUCache(sceneName, assetList):
 
 		''' exportLog
 		'''
-		logPath = moRules.rExportLogPath(geoCacheDir, assetName)
-		exportLogDict = moMethod.mExportLogRead(logPath)
-		if not exportLogDict:
+		logPath = moRules.rGPULogPath(geoCacheDir, assetName)
+		gpuLogDict = moMethod.mExportLogRead(logPath)
+		if not gpuLogDict:
 			logger.critical('[' + assetName + '] export log load failed.\n' \
 							+ 'No import will be proceed.')
 			logger.debug('ExportLog Path :\n' + logPath)
@@ -699,7 +735,7 @@ def importGPUCache(sceneName, assetList):
 		''' gpuCache
 		'''
 		gpuListDir = moRules.rGPUFilePath(geoCacheDir, assetName)
-		gpuList = moMethod.mLoadGpuList(exportLogDict, gpuListDir, '.abc')
+		gpuList = moMethod.mLoadGpuList(gpuLogDict, gpuListDir, '.abc')
 		if gpuList:
 			logger.info('gpuNS: <' + gpuNS + '> Del.')
 			# remove moGCGPU namespace
@@ -711,7 +747,7 @@ def importGPUCache(sceneName, assetList):
 			for gpuFile in gpuList:
 				# import gpu and keep moGCGPU namespace in gpu
 				moMethod.mImportGPUCache(
-					gpuListDir, gpuFile, gpuGrp, assetName, gpuNS, workingNS)
+					gpuListDir, gpuFile, gpuGrp, assetName, gpuNS)
 		else:
 			logger.warning('[' + assetName + '] No gpu file to import.')
 
