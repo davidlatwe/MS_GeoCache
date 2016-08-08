@@ -121,28 +121,10 @@ def exec_Import(actionType, paramDict):
 			conflictList= paramDict['conflict']
 			)
 	if actionType == 2:
-		'''
-		save geo to cacheDir as M
-		
-		moGeoCache.exportGPUCache(
+		moGeoCache.gpuProxyReferencing(
 			sceneName= paramDict['sceneName'],
 			assetName_override= paramDict['assetName']
 			)
-		
-		new file
-		'''
-		moGeoCache.importGPUCache(
-			sceneName= paramDict['sceneName'],
-			assetList= paramDict['assetList']
-			)
-		'''
-		save gpu
-
-		new file
-		ref geo
-		proxy gpu
-		save
-		'''
 	if actionType == 3:
 		pass
 

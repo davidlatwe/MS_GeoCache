@@ -76,8 +76,8 @@ def rAssetName(nodeNS):
 	"""
 	Return basename and id string, if nodeNS ends with digi
 	"""
-	#return nodeNS.split('_')[0] + re.sub('.*?([0-9]*)$', r'\1', nodeNS)
-	return nodeNS.split('_')[0]
+	return nodeNS.split('_')[0] + re.sub('.*?([0-9]*)$', r'\1', nodeNS)
+	#return nodeNS.split('_')[0]
 
 
 def rPlaybackRange():
@@ -279,6 +279,74 @@ def rGPULogPath(geoCacheDir, assetName= None, makeDir= None):
 	else:
 		fileName = ''
 	filePath = geoCacheDir + sInfo.sep + 'moGPULog' + sInfo.sep \
+			 + fileName
+	if makeDir:
+		sInfo.makeDir(filePath, 1)
+
+	return filePath
+
+
+def rGeoMaFilePath(geoCacheDir, assetName= None, makeDir= None):
+	"""
+	"""
+	sInfo = _getSceneInfo()
+	shotNum = sInfo.getShotNum(os.path.basename(geoCacheDir))
+	if assetName:
+		fileName = assetName + '_c' + shotNum + '_GEO_M.ma'
+	else:
+		fileName = ''
+	filePath = geoCacheDir + sInfo.sep + 'moProxyRef' + sInfo.sep \
+			 + fileName
+	if makeDir:
+		sInfo.makeDir(filePath, 1)
+
+	return filePath
+
+
+def rGpuMaFilePath(geoCacheDir, assetName= None, makeDir= None):
+	"""
+	"""
+	sInfo = _getSceneInfo()
+	shotNum = sInfo.getShotNum(os.path.basename(geoCacheDir))
+	if assetName:
+		fileName = assetName + '_c' + shotNum + '_GPU_M.ma'
+	else:
+		fileName = ''
+	filePath = geoCacheDir + sInfo.sep + 'moProxyRef' + sInfo.sep \
+			 + fileName
+	if makeDir:
+		sInfo.makeDir(filePath, 1)
+
+	return filePath
+
+
+def rLocMaFilePath(geoCacheDir, assetName= None, makeDir= None):
+	"""
+	"""
+	sInfo = _getSceneInfo()
+	shotNum = sInfo.getShotNum(os.path.basename(geoCacheDir))
+	if assetName:
+		fileName = assetName + '_c' + shotNum + '_LOC_M.ma'
+	else:
+		fileName = ''
+	filePath = geoCacheDir + sInfo.sep + 'moProxyRef' + sInfo.sep \
+			 + fileName
+	if makeDir:
+		sInfo.makeDir(filePath, 1)
+
+	return filePath
+
+
+def rProxRefFilePath(geoCacheDir, assetName= None, makeDir= None):
+	"""
+	"""
+	sInfo = _getSceneInfo()
+	shotNum = sInfo.getShotNum(os.path.basename(geoCacheDir))
+	if assetName:
+		fileName = assetName + '_c' + shotNum + '_PXRF_M.ma'
+	else:
+		fileName = ''
+	filePath = geoCacheDir + sInfo.sep + 'moProxyRef' + sInfo.sep \
 			 + fileName
 	if makeDir:
 		sInfo.makeDir(filePath, 1)

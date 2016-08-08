@@ -7,6 +7,7 @@ Created on 2016.04.28
 import sys, os
 import maya.cmds as cmds
 import maya.mel as mel
+import pymel.core as pm
 import moCache.moGeoCacheRules as moRules; reload(moRules)
 import moCache.moGeoCacheMethod as moMethod; reload(moMethod)
 import mLogger; reload(mLogger)
@@ -84,6 +85,7 @@ def exportGeoCache(
 	assetName_override= None, sceneName_override= None):
 	"""
 	輸出 geoCache
+	可輸出多個已選取的 Asset
 	@param  subdivLevel - 模型在 cache 之前需要被 subdivide smooth 的次數
 	@param    isPartial - 局部輸出模式 (只輸出所選，不輸出 asset 的所有子物件)
 	@param     isStatic - 靜態物件輸出
@@ -350,6 +352,7 @@ def importGeoCache(
 	ignorDuplicateName= None, conflictList= None, didWrap= None):
 	"""
 	輸入 geoCache
+	可輸入多個已選取的 Asset
 	@param    sceneName - geoCache 來源的場景名稱
 	@param    isPartial - 局部輸入模式 (只輸入所選，不輸入 asset 的所有子物件)
 	@param  assetName_override - 輸出過程用此取代該 物件 原本的 assetName
@@ -451,6 +454,7 @@ def importGeoCache(
 		geoListDir = moRules.rGeoListFilePath(geoCacheDir)
 		anim_geoDict = moMethod.mLoadGeoList(
 			exportLogDict, geoListDir, workingNS, geoFileType)
+		animTranList = []
 		if anim_geoDict:
 			animTranList = anim_geoDict.keys()
 			animTranList.sort()
@@ -550,7 +554,7 @@ def importGeoCache(
 		'''
 		didWrap = [] if didWrap is None else didWrap
 		wrapDict = moMethod.mGetWrappingList(assetName)
-		if not isPartial and wrapDict:
+		if wrapDict:
 			logger.info('[' + rootNode + ']' + ' has wrap set.')
 			wBatchDict = {}
 			willWrap = []
@@ -563,11 +567,15 @@ def importGeoCache(
 					# convert name
 					wSource = wrapDict[wSet]['source']
 					wTarget = wrapDict[wSet]['target']
+					if wSource not in animTranList:
+						# wSource 並沒有在這一次 import 或 更新
+						# 跳過
+						continue
 					wSource, wTarget = moMethod.mFindWrapObjsName(
 						wSource, wTarget, assetNS, conflictList)
 					if wSource and wTarget:
 						# check if wrapSource cached or wrapped in last iter
-						if moMethod.mWrapSourceHasCached(wSource):
+						if wTarget and moMethod.mWrapSourceHasCached(wSource):
 							wBatchDict[wSource] = wTarget
 							willWrap.append(wSet)
 							logger.info('[' + rootNode + '] WrapSet ' \
@@ -588,6 +596,7 @@ def importGeoCache(
 				logger.info('[' + rootNode + ']' \
 					+ ' Starting cache wrapped object.')
 				cmds.select(wTargetBat, r= 1)
+				logger.debug('Selected WrapBat : \n' + '\n'.join(wTargetBat))
 				exportGeoCache(
 					isPartial= True,
 					assetName_override= assetName_override,
@@ -611,6 +620,7 @@ def importGeoCache(
 def exportGPUCache(sceneName, assetName_override= None):
 	"""
 	輸出 GPU Cache
+	可輸出多個已選取的 Asset
 	@param    sceneName - geoCache 來源的場景名稱，用以對應
 	@param  assetName_override - 輸出過程用此取代該 物件 原本的 assetName
 	"""
@@ -758,6 +768,8 @@ def importGPUCache(sceneName, assetList):
 def gpuProxyReferencing(sceneName, assetName_override= None):
 	"""
 	製作 GPU Proxy Referencing
+	一次一個 Asset, 由於此功能涉及 Asset 存檔, 因此最好在 Import 時
+	就將每個 Asset 分開處理
 	@param    sceneName - geoCache 來源的場景名稱，用以對應
 	@param  assetName_override - 輸出過程用此取代該 物件 原本的 assetName
 	"""
@@ -785,33 +797,86 @@ def gpuProxyReferencing(sceneName, assetName_override= None):
 		else assetName_override
 	geoCacheDir = getGeoCacheDir(geoRootPath, assetName, 0, sceneName)
 
-	logger.info('AssetName: [' + assetName + ']')
+	logger.info('AssetName: [' + assetName + ']\nPXRF proc start.')
 
 	# return
+
+	''' remove unknow nodes
+	'''
+	logger.info('Cleaning unknow nodes...')
+	mel.eval('source cleanUpScene;')
+	mel.eval('putenv "MAYA_TESTING_CLEANUP" "1";')
+	mel.eval('scOpt_saveAndClearOptionVars(1);')
+	mel.eval('scOpt_setOptionVars( {"unknownNodesOption"} );')
+	mel.eval('cleanUpScene( 1 );')
+	mel.eval('scOpt_saveAndClearOptionVars(0);')
+	mel.eval('putenv "MAYA_TESTING_CLEANUP" "";')
+
 	''' save geoCache
 	'''
-	#cmds.file(s= 1)
+	logger.info('PXRF : Saving Geo Cache Scene...')
+	geoMaFilePath = moRules.rGeoMaFilePath(geoCacheDir, assetName, 1)
+	cmds.file(rn= geoMaFilePath)
+	cmds.file(f= 1, s= 1, type='mayaAscii')
+	logger.debug('GEO : \n' + geoMaFilePath)
 
 	''' export gpu
 	'''
+	logger.info('PXRF : Exporting GPU Cache...')
 	cmds.select(rootNode, r= 1)
-	moGeoCache.exportGPUCache(sceneName, assetName_override)
+	exportGPUCache(sceneName, assetName_override)
 
 	''' import gpu
 	'''
+	logger.info('PXRF : Importing GPU Cache...')
 	cmds.file(new= 1, f= 1)
 	importGPUCache(sceneName, [assetName])
 
 	''' save gpu
 	'''
-	#cmds.file(s= 1)
+	logger.info('PXRF : Saving GPU Cache Scene...')
+	gpuMaFilePath = moRules.rGpuMaFilePath(geoCacheDir, assetName, 1)
+	cmds.file(rn= gpuMaFilePath)
+	cmds.file(f= 1, s= 1, type='mayaAscii')
+	logger.debug('GPU : \n' + gpuMaFilePath)
+
+	''' make locator
+	'''
+	logger.info('PXRF : Saving Locator Scene...')
+	cmds.file(new= 1, f= 1)
+	cmds.spaceLocator(n= 'moProxyLoc')
+	locMaFilePath = moRules.rLocMaFilePath(geoCacheDir, assetName, 1)
+	cmds.file(rn= locMaFilePath)
+	cmds.file(f= 1, s= 1, type='mayaAscii')
+	logger.debug('GPU : \n' + locMaFilePath)
 
 	''' proxyReferencing
 	'''
+	logger.info('PXRF : Making proxyReferencing...')
 	cmds.file(new= 1, f= 1)
-	# ref geo
+	# ref loc
+	cmds.file(locMaFilePath, r= 1, typ= 'mayaAscii', mnc= 0, ns= assetName + '_moPXRF_')
+	# proxy geo
+	pm.mel.proxyAdd(assetName + '_moPXRF_RN', geoMaFilePath, 'GEO')
 	# proxy gpu
+	pm.mel.proxyAdd(assetName + '_moPXRF_RN', gpuMaFilePath, 'GPU')
+
+	''' timeInfo
+	'''
+	# go set frameRate and playback range
+	timeInfoFile = moRules.rTimeInfoFilePath(geoCacheDir, assetName)
+	if cmds.file(timeInfoFile, q= 1, ex= 1):
+		staticInfo = moMethod.mImportTimeInfo(timeInfoFile)
+		logger.info('TimeInfo imported.')
+	else:
+		logger.critical('[' + rootNode + '] TimeInfo not exists.')
 
 	''' save proxRef
 	'''
-	#cmds.file(s= 1)
+	logger.info('PXRF : Saving PXRF Scene...')
+	pxrfMaFilePath = moRules.rProxRefFilePath(geoCacheDir, assetName, 1)
+	cmds.file(rn= pxrfMaFilePath)
+	cmds.file(f= 1, s= 1, type='mayaAscii')
+	logger.info('PXRF : Done.')
+
+	return 0

@@ -394,6 +394,7 @@ def mPolyUniteMesh(anim_meshes):
 def mSmoothMesh(ves, subdivLevel):
 	"""
 	"""
+	logger.info('Smoothing : ' + ves)
 	cmds.polySmooth(ves, mth= 0, sdt= 2, ovb= 1, ofb= 3, ofc= 0, ost= 1,
 							ocr= 0, dv= subdivLevel, bnr= 1 ,c= 1, kb= 1,
 							ksb= 1, khe= 0, kt= 1, kmb= 1, suv= 1, peh= 0,
