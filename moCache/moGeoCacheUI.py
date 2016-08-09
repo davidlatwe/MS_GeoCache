@@ -142,6 +142,9 @@ def prep_SHDSet(mode, *args):
 	if mode == 'wrapSet':
 		actSetName = 'moGCWrap'
 		filt = ['mesh']
+	if mode == 'smooth':
+		filt = ['mesh']
+
 
 	# deselect non-filt object
 	objList = ls(sl= 1)
@@ -154,25 +157,35 @@ def prep_SHDSet(mode, *args):
 
 	if mode == 'wrapSet':
 		if len(objList) > 1:
-			actSet = ls(actSetName + '_*', typ= 'objectSet')
+			# 將目前選取內容最後一個物件指定為 wrap source
 			srcObj = objList[-1].name()
+			# 列出目前已有的 wrap set
+			actSet = ls(actSetName + '_*', typ= 'objectSet')
 			if actSet:
 				wsDict = {}
+				# 整理出所有 wrap set 與其裡面的 wrap source
 				for wSet in actSet:
 					wsDict[getAttr(wSet + '.wrapSource')] = wSet
-				# check if selected source had assigned
+				# 若目前選取的 wrap source 已存在於現有的 wrap set
+				# 就將目前選取的所有物件加進該 wrap set 並返回
 				if srcObj in wsDict.keys():
 					sets(wsDict[srcObj], add= objList)
-
 					return
-			# create set and add mesh
+
+			# 目前選取的 wrap source 顯然並不存在於目前的 wrap set 中
+			# 所以建立新的 wrap set
 			wSet = sets(n= actSetName + '_1')
+			# 紀錄當前的 wrap source
 			addAttr(wSet, ln= 'wrapSource', dt= 'string')
 			setAttr(wSet + '.wrapSource', srcObj)
 		else:
 			msg = u'嗯，請至少選取兩個物件，並注意選取順序。\n' \
 				+ u'(先選取所有你要的 wrapTargets，最後再選一個 wrapSource。)'
 			confirmDialog(t= u'噢，拜託喔', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
+
+	if mode == 'smooth':
+		for obj in objList:
+			moGeoCache.doSmooth(obj.name(), 1)
 
 
 def prep_RIGSet(mode, *args):
@@ -338,6 +351,12 @@ def ui_initPrep(sideValue):
 			if True:
 				text(l= '', w= sideValue)
 				btn_addWrapSet = button(l= 'Add Wrap Set', c= partial(prep_SHDSet, 'wrapSet'))
+				text(l= '', w= sideValue)
+				setParent('..')
+			rowLayout(nc= 3, adj= 2)
+			if True:
+				text(l= '', w= sideValue)
+				btn_exeMeshSmooth = button(l= 'Do Smooth', c= partial(prep_SHDSet, 'smooth'))
 				text(l= '', w= sideValue)
 				setParent('..')
 
@@ -546,11 +565,12 @@ def ui_geoCache(midValue):
 		for c in optionMenu(optnM_assetName, q= 1, ill= 1):
 			deleteUI(c)
 		geoDir = moGeoCache.getGeoCacheRoot()
-		isF = lambda d, f: os.path.isfile(os.path.join(d,f))
-		dirList = [f for f in os.listdir(geoDir) if not isF(geoDir, f)]
-		for d in dirList:
-			menuItem(l= d, p= optnM_assetName)
-		text(txt_infoAssetName, e= 1, l= dirList[0])
+		if geoDir:
+			isF = lambda d, f: os.path.isfile(os.path.join(d,f))
+			dirList = [f for f in os.listdir(geoDir) if not isF(geoDir, f)]
+			for d in dirList:
+				menuItem(l= d, p= optnM_assetName)
+			text(txt_infoAssetName, e= 1, l= dirList[0])
 
 	def geoCacheIOctrlSwitch(col, vis, *args):
 		layout(col, e= 1, vis= vis)

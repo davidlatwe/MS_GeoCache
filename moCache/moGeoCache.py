@@ -58,10 +58,12 @@ def getGeoCacheRoot():
 	geoRootPath = moRules.rGeoCacheRoot()
 	if not geoRootPath and exc == 'maya.exe':
 		# inject default [moGeoCache] fileRule or custom later.
-		msg = u'沒看到 [moGeoCache] 在 workspace 的 fileRules 裡面。\n' \
+		msg = u'目前的專案路徑： \n' + cmds.workspace(q= 1, rd= 1) + '\n' \
+			+ u'若專案路徑不正確，請直接按 B\n' \
+			+ u'\n [moGeoCache] 不在這個 workspace 的 fileRules 裡面。\n' \
 			+ u'現在你有兩條路 :\n' \
-			+ u'A) 現在幫你設定預設路徑，並繼續執行工作。(建議選項)\n' \
-			+ u'B) 先停下工作沒關係，等一下再說。'
+			+ u'A) 現在自動設定路徑，並繼續執行。(建議選項)\n' \
+			+ u'B) 先停下，等一下再說。'
 		result = cmds.confirmDialog(t= u'開玩笑的吧', m= msg,
 			b= ['A', 'B'], db= 'A', cb= 'B', ds= 'B', icn= 'warning')
 		if result == 'A':
@@ -78,6 +80,12 @@ def getGeoCacheDir(geoRootPath, assetName, mode, sceneName):
 	並依 mode 來判斷是否需要在路徑不存在時建立資料夾
 	"""
 	return moRules.rGeoCacheDir(geoRootPath, assetName, mode, sceneName)
+
+
+def doSmooth(obj, subdivLevel):
+	"""
+	"""
+	moMethod.mSmoothMesh(obj, subdivLevel)
 
 
 def exportGeoCache(
