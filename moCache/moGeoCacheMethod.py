@@ -867,10 +867,50 @@ def mWrapSourceHasCached(wSource):
 
 def mDoWrap(wSource, wTarget):
 	"""
+	設定 geoCache 參數並執行
 	"""
+	# doWrapArgList( string $version, string $args[] )
+	# C:/Program Files/Autodesk/Maya2016/scripts/others/
+	# 	doWrapArgList.mel
+	version = 7
+
+	def _gcArgs():
+		# operation:
+		# 		1 - Create a new wrap
+		# 		2 - Add influence
+		# 		3 - Remove influence
+		operation = 1
+		# threshold:  The weight threshold to be used when creating a wrap
+		threshold = 0
+		# maxDist  :  The maxDistance to be used when creating a wrap
+		maxDist = 1
+		# inflType :  The influence type (1 = point, 2 = face)
+		inflType = 2
+		# exclusiveBind :  Bind algorithm (0=smooth, 1=exclusive)
+		exclusiveBind = 0
+		# autoWeightThreshold :  Auto weight threshold control
+		autoWeightThreshold = 1
+		# renderInfl :  Render influence objects
+		renderInfl = 0
+		# falloffMode :  Distance falloff algorithm
+		falloffMode = 0
+
+		return locals()
+
+	def _qts(var):
+		# surround string with double quote
+		return '"' + str(var) + '"'
+
+	# get all geoCache inputs value 
+	args = [ _qts(_gcArgs()[var]) for var in _gcArgs.__code__.co_varnames ]
+	# make cmd and do GeoCache
+	evalCmd = 'doWrapArgList "' + str(version) + \
+			  '" {' + ', '.join(args) + '};'
+	logger.debug('Wrap CMD : ' + evalCmd)
+
 	cmds.select(wTarget, r= 1)
 	cmds.select(wSource, add= 1)
-	mel.eval('doWrapArgList "7" {"1","0","1","2","1","1","0","0"}')
+	mel.eval(evalCmd)
 
 
 def mRemoveWrap(wSourceBat, wTargetBat):
