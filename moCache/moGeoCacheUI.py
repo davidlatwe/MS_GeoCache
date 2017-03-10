@@ -8,8 +8,8 @@ from pymel.core import *
 import maya.cmds as cmds
 from functools import partial
 from subprocess import Popen, PIPE
-import moCache.moGeoCache as moGeoCache; reload(moGeoCache)
-import moCache.moGeoCacheUICmdExport as moGeoCacheUICmdExport; reload(moGeoCacheUICmdExport)
+import moGeoCache as moGeoCache; reload(moGeoCache)
+import moGeoCacheUICmdExport as moGeoCacheUICmdExport; reload(moGeoCacheUICmdExport)
 import os
 
 

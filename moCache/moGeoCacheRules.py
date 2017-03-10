@@ -5,8 +5,9 @@ Created on 2016.05.10
 @author: davidpower
 '''
 import re, os, sys
-import mMaya.mSceneInfo as mSceneInfo; reload(mSceneInfo)
-import mLogger; reload(mLogger)
+from .. import mMaya; reload(mMaya)
+from ..mMaya import mSceneInfo; reload(mSceneInfo)
+from .. import mLogger; reload(mLogger)
 exc = os.path.basename(sys.executable)
 logger = mLogger.MLog('moGC.Rules', False if exc == 'mayapy.exe' else True)
 

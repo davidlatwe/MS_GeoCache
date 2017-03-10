@@ -8,7 +8,7 @@ import maya.cmds as cmds
 import maya.mel as mel
 import os, sys
 import functools
-import mLogger; reload(mLogger)
+from .. import mLogger; reload(mLogger)
 exc = os.path.basename(sys.executable)
 logger = mLogger.MLog('moGC.mMaya.general',
 					False if exc == 'mayapy.exe' else True)

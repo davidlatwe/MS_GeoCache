@@ -1,0 +1,1 @@
+AbcExport -j "-frameRange 101 184 -ro -uvWrite -worldSpace -eulerFilter -dataFormat ogawa -root |girl_rigging_master:master_grp|girl_rigging_master:geo_grp|girl_rigging_master:HP_geo_grp|girl_rigging_master:body_HP_geo -file O:/201604_LeYoung/Maya/cache/alembic/girlHeadTest.abc";

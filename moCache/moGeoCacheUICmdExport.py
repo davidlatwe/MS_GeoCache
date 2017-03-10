@@ -100,7 +100,8 @@ if __name__ == '__main__':
 	standalone.initialize()
 	from pymel.core import *
 	import maya.cmds as cmds
-	import moCache.moGeoCache as moGeoCache
+	import moCache; reload(moCache)
+	import moCache.moGeoCache as moGeoCache; reload(moGeoCache)
 	import mLogger
 	logger = mLogger.MLog('moGC.CMD')
 	# vars

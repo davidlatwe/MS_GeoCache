@@ -1,0 +1,43 @@
+//AbcImport  [options] File                                                 
+
+Options:                                                                   
+-rpr/ reparent      DagPath                                                 
+                    reparent the whole hierarchy under a node in the        
+                    current Maya scene                                      
+-ftr/ fitTimeRange                                                          
+                    Change Maya time slider to fit the range of input file. 
+-rcs / recreateAllColorSets                                                 
+                    IC3/4fArrayProperties with face varying scope on        
+                    IPolyMesh and ISubD are treated as color sets even if   
+                    they weren't written out of Maya.                       
+-ct / connect       string node1 node2 ...                                  
+                    The nodes specified in the argument string are supposed to be the names of top level nodes from the input file.                       
+                    If such a node doesn't exist in the provided input file, awarning will be given and nothing will be done.                             
+                    If Maya DAG node of the same name doesn't exist in the    current Maya scene,  a warning will be given and nothing will be done.      
+                    If such a node exists both in the input file and in the   current Maya scene, data for the whole hierarchy from the nodes down        
+                    (inclusive) will be substituted by data from the input file, and connections to the AlembicNode will be made or updated accordingly.    
+                    If string "/" is used as the root name,  all top level  nodes from the input file will be used for updating the current Maya scene. 
+                    Again if certain node doesn't exist in the current scene, a warning will be given and nothing will be done.                           
+                    If a single node is specified and it exists in the Maya scene but doesn't exist in the archive, children of that node will be connected to the children of the archive.                                            
+-crt/ createIfNotFound                                                      
+                    Used only when -connect flag is set.                    
+-rm / removeIfNoUpdate                                                      
+                    Used only when -connect flag is set.                    
+-sts/ setToStartFrame                                                       
+                    Set the current time to the start of the frame range    
+-m  / mode          string ("open"|"import"|"replace")                
+                    Set read mode to open/import/replace (default to import)
+-ft / filterObjects "regex1 regex2 ..."                                   
+                    Selective import cache objects whose name matches with  
+-eft / excludeFilterObjects "regex1 regex2 ..."                          
+                    Selective exclude cache objects whose name matches with 
+the input regular expressions.                                              
+-h  / help          Print this message                                      
+-d  / debug         Turn on debug message printout                        
+
+Example:                                                                    
+AbcImport -h;                                                               
+AbcImport -d -m open "/tmp/test.abc";                                     
+AbcImport -ftr -ct "/" -crt -rm "/mcp/test.abc";                        
+AbcImport -ct "root1 root2 root3 ..." "/mcp/test.abc";                  
+ // 

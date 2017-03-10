@@ -8,9 +8,9 @@ import sys, os
 import maya.cmds as cmds
 import maya.mel as mel
 import pymel.core as pm
-import moCache.moGeoCacheRules as moRules; reload(moRules)
-import moCache.moGeoCacheMethod as moMethod; reload(moMethod)
-import mLogger; reload(mLogger)
+import moGeoCacheRules as moRules; reload(moRules)
+import moGeoCacheMethod as moMethod; reload(moMethod)
+from .. import mLogger; reload(mLogger)
 exc = os.path.basename(sys.executable)
 logger = mLogger.MLog('moGC.Core', False if exc == 'mayapy.exe' else True)
 

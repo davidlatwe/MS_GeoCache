@@ -7,11 +7,12 @@ Created on 2016.05.12
 import pymel.core as pm
 import maya.cmds as cmds
 import maya.mel as mel
-import mMaya.mOutliner as mOutliner; reload(mOutliner)
-import mMaya.mGeneral as mGeneral; reload(mGeneral)
+from .. import mMaya; reload(mMaya)
+from ..mMaya import mOutliner; reload(mOutliner)
+from ..mMaya import mGeneral; reload(mGeneral)
 import os, sys
 import json
-import mLogger; reload(mLogger)
+from .. import mLogger; reload(mLogger)
 exc = os.path.basename(sys.executable)
 logger = mLogger.MLog('moGC.Method', False if exc == 'mayapy.exe' else True)
 
