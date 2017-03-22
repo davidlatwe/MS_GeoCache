@@ -655,7 +655,7 @@ def ui_main():
 	if window(windowName, q= 1, ex= 1):
 		deleteUI(windowName)
 
-	window(windowName, t= 'GeoCache Settings', s= 0, mxb= 0, mnb= 0)
+	window(windowName, t= 'GeoCache Settings_DEV', s= 0, mxb= 0, mnb= 0)
 	main_column = columnLayout(adj= 1)
 	# geoCache
 	ui_initPrep(50)

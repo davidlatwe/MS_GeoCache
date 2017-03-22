@@ -18,6 +18,24 @@ def _getSceneInfo():
 	return mSceneInfo.SceneInfo()
 
 
+def _get_MS_Env():
+	"""
+	"""
+	proj = os.environ.get('PROJ')
+	step = os.environ.get('STEP')
+	major = os.environ.get('MAJOR')
+	minor = os.environ.get('MINOR')
+	
+	return {'PROJ': proj, 'STEP': step, 'MAJOR': major, 'MINOR': minor}
+
+
+def _isMSPipeline():
+	"""
+	"""
+	envSet = _get_MS_Env()
+	return {} if envSet.values().count(None) else envSet
+
+
 def rCurrentSceneName():
 	"""
 	"""
@@ -100,23 +118,31 @@ def rFrameRate():
 def rWorkspaceRoot():
 	"""
 	"""
-	sInfo = _getSceneInfo()
-
-	return sInfo.workspaceRoot
+	envSet = _isMSPipeline()
+	if not envSet:
+		sInfo = _getSceneInfo()
+		return sInfo.workspaceRoot
+	else:
+		shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
+		return '/'.join(shotObj.getPath().split(os.sep))
 
 
 def rGeoCacheRoot():
 	"""
 	"""
-	sInfo = _getSceneInfo()
-	geoRootPath = ''
-	try:
-		geoRootPath = sInfo.workspaceRoot + sInfo.dirRule['moGeoCache']
-	except:
-		logger.error('[moGeoCache] file rule missing.')
+	envSet = _isMSPipeline()
+	if not envSet:
+		sInfo = _getSceneInfo()
+		geoRootPath = ''
+		try:
+			geoRootPath = sInfo.workspaceRoot + sInfo.dirRule['moGeoCache']
+		except:
+			logger.error('[moGeoCache] file rule missing.')
 
-	return geoRootPath
-
+		return geoRootPath
+	else:
+		shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
+		return '/'.join(shotObj.getPath('cache').split(os.sep))
 
 
 def rGeoCacheDir(geoRootPath, assetName, mustMake, sceneName= None):
@@ -353,3 +379,8 @@ def rProxRefFilePath(geoCacheDir, assetName= None, makeDir= None):
 		sInfo.makeDir(filePath, 1)
 
 	return filePath
+
+
+if _isMSPipeline():
+	import shotAssetUtils
+	reload(shotAssetUtils)
