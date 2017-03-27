@@ -123,7 +123,8 @@ def rWorkspaceRoot():
 		sInfo = _getSceneInfo()
 		return sInfo.workspaceRoot
 	else:
-		shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
+		#shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
+		shotObj = shotAssetUtils.Project(proj= envSet['PROJ'])
 		return '/'.join(shotObj.getPath().split(os.sep))
 
 
@@ -141,8 +142,9 @@ def rGeoCacheRoot():
 
 		return geoRootPath
 	else:
-		shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
-		return '/'.join(shotObj.getPath('cache').split(os.sep))
+		#shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
+		shotObj = shotAssetUtils.Project(proj= envSet['PROJ'])
+		return '/'.join(shotObj.getPath('geoCache').split(os.sep))
 
 
 def rGeoCacheDir(geoRootPath, assetName, mustMake, sceneName= None):
