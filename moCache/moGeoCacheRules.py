@@ -145,7 +145,7 @@ def rGeoCacheRoot():
 		#shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
 		if envSet['STEP'] == 'fx':
 			shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
-			pathSplit = shotObj.getPath('cache').split(os.sep)
+			pathSplit = shotObj.getPath('cache').replace('work', 'pub').split(os.sep)
 			pathSplit.append('moGeoCache')
 			return '/'.join(pathSplit)
 		else:
