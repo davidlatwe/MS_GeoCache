@@ -143,8 +143,14 @@ def rGeoCacheRoot():
 		return geoRootPath
 	else:
 		#shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
-		shotObj = shotAssetUtils.Project(proj= envSet['PROJ'])
-		return '/'.join(shotObj.getPath('geoCache').split(os.sep))
+		if envSet['STEP'] == 'fx':
+			shotObj = shotAssetUtils.Project(proj= envSet['PROJ']).stepMajorMinor(envSet['STEP'], envSet['MAJOR'], envSet['MINOR'])
+			pathSplit = shotObj.getPath('cache').split(os.sep)
+			pathSplit.append('moGeoCache')
+			return '/'.join(pathSplit)
+		else:
+			shotObj = shotAssetUtils.Project(proj= envSet['PROJ'])
+			return '/'.join(shotObj.getPath('geoCache').split(os.sep))
 
 
 def rGeoCacheDir(geoRootPath, assetName, mustMake, sceneName= None):
