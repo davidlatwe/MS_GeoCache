@@ -192,9 +192,9 @@ def prep_RIGSet(mode, *args):
 	"""
 	"""
 	sname = system.sceneName().namebase.lower()
-	if '_rigging_' not in sname and '_rig_' not in sname:
+	if '_rigging_' not in sname and '_rig_' not in sname and '_rm' not in sname:
 		msg = u'目前開啟的場景並不是一個 rigging asseet。\n' \
-			+ u'(此判斷是基於檔名未包含 "_rigging_" 或 "_rig_" 等字串。)'
+			+ u'(此判斷是基於檔名未包含 "_rigging_" 或 "_rig_" 或 "_rm" 等字串。)'
 		confirmDialog(t= u'不可以', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 		return
 
@@ -263,9 +263,9 @@ def prep_setSmoothExclusive(*args):
 	"""
 	global cBox_exclusive
 	sname = system.sceneName().namebase.lower()
-	if '_rigging_' not in sname and '_rig_' not in sname:
+	if '_rigging_' not in sname and '_rig_' not in sname and '_rm' not in sname:
 		msg = u'目前開啟的場景並不是一個 rigging asseet。\n' \
-			+ u'(此判斷是基於檔名未包含 "_rigging_" 或 "_rig_" 等字串。)'
+			+ u'(此判斷是基於檔名未包含 "_rigging_" 或 "_rig_" 或 "_rm" 等字串。)'
 		confirmDialog(t= u'不可以', m= msg, b= [u'好，我錯了'], db= u'好，我錯了', icn= 'warning')
 		checkBox(cBox_exclusive, e= 1, v= 0)
 		return
@@ -287,7 +287,7 @@ def ui_getSmoothExclusive():
 	"""
 	global cBox_exclusive
 	sname = system.sceneName().namebase.lower()
-	if '_rigging_' not in sname and '_rig_' not in sname:
+	if '_rigging_' not in sname and '_rig_' not in sname and '_rm' not in sname:
 		checkBox(cBox_exclusive, e= 1, v= 0)
 		return
 
