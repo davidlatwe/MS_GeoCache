@@ -55,7 +55,7 @@ class SceneInfo(object):
 		"""
 		ruleDict = {}
 		for rule in cmds.workspace(q= 1, frl= 1):
-			ruleDict[rule] = cmds.workspace(rule, q= 1, fre= 1)
+			ruleDict[rule] = mel.eval('workspace -q -fre "{}";'.format(rule))
 
 		return ruleDict
 
